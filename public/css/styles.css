@@ -1,0 +1,76 @@
+/* CSS VARIABLES DE COLORES */
+:root {
+    --primary: #f80fa6;
+    --secondary: #747575;
+    --pinklight:#fdb4e4;
+}
+/* BG */
+.bg-primary{
+    background-color: var(--primary);
+}
+.bg-secondary{
+    background-color: var(--secondary);
+}
+.bg-pinklight {
+    background-color: var(--pinklight);
+}
+.bg-logo{
+    background-image:url('img/bgheader.png');
+    background-size: 380px auto;
+}
+/* TEXT */
+.text-primary{
+    color: var(--primary);
+}
+.text-secondary{
+    color: var(--secondary);
+}
+.text-pinklight {
+    color: var(--pinklight);
+}
+/* BORDER */
+.border-primary{
+    border-color: var(--primary);
+}
+.border-secondary{
+    border-color: var(--secondary);
+}
+
+
+/* CSS SCROLL GENERAL */
+* {
+    scroll-behavior: smooth;
+}
+body::-webkit-scrollbar {
+    width: 1px;
+}
+@media only screen and (max-width: 768px) {
+body::-webkit-scrollbar {
+    width: 0px;
+}
+}
+body::-webkit-scrollbar-track {
+    background: var(--primary);
+}
+body::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+}
+
+/* CSS SCROLL CATEGORIAS */
+.scrolld::-webkit-scrollbar {
+    width: 0px;
+}
+.scrolld::-webkit-scrollbar-track {
+    background: var(--primary);
+}
+.scrolld::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+}
+html{
+    background-color: rgb(241 245 249);
+    /* overflow-x:hidden;
+    overflow-y:hidden; */
+}
+.img-white {
+    filter: brightness(0) invert(1);
+}

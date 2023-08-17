@@ -16,6 +16,22 @@ export default {
             },
         },
     },
-
-    plugins: [forms],
+    daisyui: {
+        themes: [
+            {
+                plexus_theme: {
+                    "primary": "#e7e5e4",  
+                    "secondary": "#9ca3af",  
+                    "accent": "#d59b6c",
+                    "neutral": "#836b5d",
+                    "base-100": "#f2f2f2",    
+                    "info": "#42aebd",     
+                    "success": "#489380",
+                    "warning": "#eb8014", 
+                    "error": "#e01a2e",
+                },
+            },
+        ],
+    },
+    plugins: [forms, require("daisyui")],
 };

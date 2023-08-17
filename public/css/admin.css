@@ -1,0 +1,27 @@
+:root {
+    --rosa:#f80fa6;
+}
+
+.bg-rosa {
+    background-color: var(--rosa);
+    color:#747575;
+}
+
+.menu[class*=p-] li a {
+    border-radius: var(--rounded-btn,.5rem);
+}
+.menu[class*=p-] li .dropmenu {
+    border-radius: var(--rounded-btn,.5rem);
+}
+.menu :where(li)>.dropmenu {
+    cursor: pointer;
+}
+.menu li>a, .menu li>span, .menu li>.dropmenu {
+    padding: 0.2rem 1rem;
+    color:currentColor;
+}
+.menu li>.dropmenu:focus, .menu li>.dropmenu:hover {
+    --tw-bg-opacity: 1;
+    --tw-bg-opacity: 0.1;
+    background-color: hsla(var(--bc)/var(--tw-bg-opacity,1));
+}
