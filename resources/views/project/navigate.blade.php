@@ -90,7 +90,7 @@
     </dialog>
     <dialog id="modal_add_dir" class="modal">
         <div method="dialog" class="modal-box">
-            <h3 class="font-bold text-lg">Añadir archivo</h3>
+            <h3 class="font-bold text-lg">Crear carpeta</h3>
             <form action="{{ route('navigate-add-dir') }}" method="POST" class="py-4">
                 @csrf
                 <div class="form-control">
