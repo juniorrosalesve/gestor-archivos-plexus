@@ -64,7 +64,7 @@
                     <label class="label">
                         <span class="label-text">Nombre <i class="text-red-500">*</i></span>
                     </label> 
-                    <input type="text" name="name" value="Presupuesto 1094" class="input input-bordered" autocomplete="off" required>
+                    <input type="text" name="name" class="input input-bordered" autocomplete="off" required>
                 </div>
                 {{-- <div class="form-control">
                     <label class="label">
@@ -97,7 +97,7 @@
                     <label class="label">
                         <span class="label-text">Nombre <i class="text-red-500">*</i></span>
                     </label> 
-                    <input type="text" name="name" value="Presupuesto 1094" class="input input-bordered" autocomplete="off" required>
+                    <input type="text" name="name" class="input input-bordered" autocomplete="off" required>
                 </div>
                 <div class="form-control">
                     <label class="label">
