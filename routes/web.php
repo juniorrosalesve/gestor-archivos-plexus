@@ -16,7 +16,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/projects', [DashboardController::class, 'viewProjectOpens'])->name('dashboard-projects');
+    Route::get('/dashboard/projects/{region}/{country}', [DashboardController::class, 'viewProjectOpens'])->name('dashboard-projects');
     Route::prefix('projects')->group(function () {
         Route::get('/', [ProyectoController::class, 'index'])->name('project-index');
         Route::get('/create-project', [ProyectoController::class, 'create'])->name('create-project');

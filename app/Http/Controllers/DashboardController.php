@@ -12,28 +12,54 @@ use App\Models\Country;
 
 class DashboardController extends Controller
 {
-    public function index() {
+    public function index(Request $r) {
+        $region     =   null;
+        $country    =   null;
+        if($r->has('region') && $r->has('country')) {
+            if($r->region > 0)
+                $region     =   Region::find($r->region);
+            if($r->country > 0)
+                $country    =   Country::find($r->country);
+        }
+        if($region != null)
+            $countries  =   Country::where('regionId', $region->id)->get();
+        else
+            $countries  =   Country::all();
+
+        if($region == null && $country == null)
+            $projects   =   Project::all();
+        if($region != null && $country == null)
+            $projects   =   Project::where('regionId', $region->id)->get();
+        if($region != null && $country != null)
+            $projects   =   Project::where('regionId', $region->id)->where('countryId', $country->id)->get();
         return view('dashboard', [
-            'financiera_chart' => $this->generateChart("Admin. / Financiera"),
-            'operativa_chart' => $this->generateChart("Operativa"),
-            'estrategica_tactica_chart' => $this->generateChart("Estratégica / Táctica"),
-            'gestion_humana_chart' => $this->generateChart("Gestión Humana"),
+            'financiera_chart' => $this->generateChart("Admin. / Financiera", $r->region, $r->country),
+            'operativa_chart' => $this->generateChart("Operativa", $r->region, $r->country),
+            'estrategica_tactica_chart' => $this->generateChart("Estratégica / Táctica", $r->region, $r->country),
+            'gestion_humana_chart' => $this->generateChart("Gestión Humana", $r->region, $r->country),
 
-            'projects_opens' => $this->getProjectsOpen(),
+            'projects_opens' => $this->getProjectsOpen($r->region, $r-> country),
             'regions' => Region::all(),
-            'countries' => Country::all(),
-            'projects' => Project::all()
+            'countries' => $countries,
+            'projects' => $projects,
+            'region' => $region,
+            'country' => $country
         ]);
     }
 
-    public function viewProjectOpens() {
+    public function viewProjectOpens($region, $country) {
         return view('projects', [
-            'projects' => $this->getProjectsOpen()
+            'projects' => $this->getProjectsOpen($region, $country)
         ]);
     }
 
-    private function generateChart($rootName) {
-        $projects   =   Project::all();
+    private function generateChart($rootName, $region, $country) {
+        if($region == 0 && $country == 0)
+            $projects   =   Project::all();
+        if($region != 0 && $country == 0)
+            $projects   =   Project::where('regionId', $region)->get();
+        if($region != 0 && $country != 0)
+            $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
         $result     =   [];
         if(sizeof($projects) == 0) {
             $porcentaje     =   [];
@@ -189,8 +215,13 @@ class DashboardController extends Controller
         return $porcentaje;
     }
 
-    private function getProjectsOpen() {
-        $projects   =   Project::all();
+    private function getProjectsOpen($region, $country) {
+        if($region == 0 && $country == 0)
+            $projects   =   Project::all();
+        if($region != 0 && $country == 0)
+            $projects   =   Project::where('regionId', $region)->get();
+        if($region != 0 && $country != 0)
+            $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
         $actives    =   [];
         foreach($projects as $project) {
             $now        =   new \DateTime();

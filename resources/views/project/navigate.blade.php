@@ -213,9 +213,9 @@
                                 }
                             }
                         }
-                        else {
-                            prepareAppend   +=  '<li class="text-xs">- Vacío</li>';
-                        }
+                        // else {
+                        //     prepareAppend   +=  '<li class="text-xs">- Vacío</li>';
+                        // }
                         prepareAppend   +=   '</ul>';
                         $(detailsId).append(prepareAppend);
                     }
