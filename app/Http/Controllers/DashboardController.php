@@ -43,7 +43,8 @@ class DashboardController extends Controller
             'countries' => $countries,
             'projects' => $projects,
             'region' => $region,
-            'country' => $country
+            'country' => $country,
+            'jsCountries' => Country::all()
         ]);
     }
 
@@ -148,6 +149,7 @@ class DashboardController extends Controller
         /* Ordenamos un poco los datos para Chart.js */
         $replaceResult     =   [];
         $total  =   0;
+        // dd($result);
         for($i = 0; $i < sizeof($result); $i++)
         {
             $keys       =   $result['keys'];

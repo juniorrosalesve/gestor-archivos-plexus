@@ -30,6 +30,19 @@ class ProyectoController extends Controller
             'gestion_humana' => $this->gestion_humana
         ]);
     }
+    public function edit($projectId) {
+        $project    =   Project::find($projectId);
+        $root       =   Directory::where('projectId', $projectId)->where('route', 0)->get();
+        $dirs       =   Directory::where('projectId', $projectId)->where('route', 1)->get();
+        return view('project.edit', [
+            'regions' => Region::orderBy('name', 'asc')->get(),
+            'countries' => Country::orderBy('name', 'asc')->get(),
+            'gerentes' => User::where('access', 'g')->orderBy('name', 'asc')->get(),
+            'project' => $project,
+            'root' => $root,
+            'dirs' => $dirs
+        ]);
+    }
     public function projects($regionId, $countryId) {
         $projects   =   Project::where('regionId', $regionId)->where('countryId', $countryId)->get();
         return view('project.project', [
@@ -69,6 +82,25 @@ class ProyectoController extends Controller
         return "<script>alert('Proyecto creado correctamente!');location.href='".route('projects', [
             'regionId' => $store->regionId,
             'countryId' => $store->countryId
+        ])."'</script>";
+    }
+    public function update(Request $r) {
+        $update     =   $r->except([
+            '_token',
+            'dir_update_value',
+            'dir_update_id',
+            'projectId'
+        ]);
+        for($i = 0; $i < sizeof($r->dir_update_id); $i++) {
+            $weeks  =   explode("-", $r->dir_update_value[$i]);
+            if(sizeof($weeks) > 1)
+                Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => $weeks[1]]);
+            else
+                Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0]]);
+        }
+        Project::where('id', $r->projectId)->update($update);
+        return "<script>alert('Guardado correctamente!');location.href='".route('edit-project', [
+            'projectId' => $r->projectId,
         ])."'</script>";
     }
     private function create_default_directory($root, $subdirs, $week, $projectId) {

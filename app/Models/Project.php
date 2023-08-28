@@ -22,7 +22,7 @@ class Project extends Model
         return $this->belongsTo('App\Models\Region', 'regionId');
     }
     public function country() {
-        return $this->belongsTo('App\Models\Country', 'id');
+        return $this->belongsTo('App\Models\Country', 'countryId');
     }
 
     public function directories() {

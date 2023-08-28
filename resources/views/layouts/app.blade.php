@@ -50,7 +50,8 @@
                     @if (Auth::user()->access == 'a')
                         <li>
                             <a href="{{ route('project-index') }}" @if (\Request::route()->getName() == 'project-index'
-                                || \Request::route()->getName() == 'projects' || \Request::route()->getName() == 'project')
+                                || \Request::route()->getName() == 'projects' || \Request::route()->getName() == 'project' ||
+                                \Request::route()->getName() == 'edit-project' || \Request::route()->getName() == 'create-project')
                                 class="bg-base-300 text-secondary-content rounded-lg"
                             @endif>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6"><title>tie</title><path d="M6,2L10,6L7,17L12,22L17,17L14,6L18,2Z" /></svg>

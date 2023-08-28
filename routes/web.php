@@ -20,11 +20,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('projects')->group(function () {
         Route::get('/', [ProyectoController::class, 'index'])->name('project-index');
         Route::get('/create-project', [ProyectoController::class, 'create'])->name('create-project');
+        Route::get('/edit-project/{projectId}', [ProyectoController::class, 'edit'])->name('edit-project');
         
         Route::get('/l/{regionId}/{countryId}', [ProyectoController::class, 'projects'])->name('projects');
         Route::get('/s/{regionId}/{countryId}/{projectId}', [ProyectoController::class, 'project'])->name('project');
         
         Route::post('/store-project', [ProyectoController::class, 'store'])->name('store-project');
+        Route::post('/update-project', [ProyectoController::class, 'update'])->name('update-project');
 
         /* AXIOS */
         Route::get('/navigate', [ProyectoController::class, 'navigate'])->name('navigate');

@@ -25,7 +25,7 @@
                             <option value="{{ $item->id }}">{{ $item->name }} - {{ $item->user->name }}</option>
                         @endforeach
                     </select>
-                    <select class="select select-bordered mx-3" id="eligePais" onchange="selectPais(this)">
+                    <select class="select select-bordered mx-3" id="eligePais">
                         @if($region != null)
                             @if ($country != null)
                                 <option value="0">Todos los paises</option>
@@ -473,8 +473,7 @@
             }
         };
 
-        const paises    =   @json($countries);
-        let isVisible   =   false;
+        const paises    =   @json($jsCountries);
 
         function onClickSearch() {
             const region    =   $("#eligeRegion").val();
@@ -487,19 +486,16 @@
         }
 
         function selectRegion(e) {
-            const id    =   $(e).val();
+            const id    =   $("#eligeRegion").val();
             let countries   =   [];
             for(var i = 0; i < paises.length; i++) {
                 if(paises[i].regionId == id)
                     countries.push(paises[i]);
             }
+            console.log(countries);
             $("#eligePais").html('<option value="0" selected>Todos los paises</option>');
             for(var i = 0; i < countries.length; i++) 
                 $("#eligePais").append('<option value="'+countries[i].id+'">'+countries[i].name+'</option>');
-            if(!isVisible) {
-                $("#eligePais").show();
-                isVisible = true;
-            }
         }
     </script>
 @endsection
