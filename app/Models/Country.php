@@ -13,4 +13,8 @@ class Country extends Model
         'name',
         'regionId'
     ];
+
+    public function projects() {
+        return $this->hasMany('App\Models\Project', 'countryId');
+    }
 }

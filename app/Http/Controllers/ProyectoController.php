@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Region;
 use App\Models\Country;
 use App\Models\Directory;
+use App\Models\Cronograma;
 
 class ProyectoController extends Controller
 {
@@ -52,12 +53,14 @@ class ProyectoController extends Controller
         ]);
     }
     public function project($regionId, $countryId, $projectId) {
-        $dirs       =   Directory::where('projectId', $projectId)->where('route', 0)->get();
+        $cronogramas    =   Cronograma::where('projectId', $projectId)->get();
+        $dirs           =   Directory::where('projectId', $projectId)->where('route', 0)->get();
         return view('project.navigate', [
             'region' => Region::find($regionId),
             'country' => Country::find($countryId),
             'project' => Project::find($projectId),
-            'dirs' => $dirs
+            'dirs' => $dirs,
+            'cronogramas' => $cronogramas
         ]);
     }
 
@@ -102,6 +105,25 @@ class ProyectoController extends Controller
         return "<script>alert('Guardado correctamente!');location.href='".route('edit-project', [
             'projectId' => $r->projectId,
         ])."'</script>";
+    }
+    public function update_cronograma(Request $r) {
+        $project    =   Project::find($r->projectId);
+        Cronograma::where('projectId', $r->projectId)->delete();
+        for($i = 0; $i < sizeof($r->numero_factura); $i++)
+            Cronograma::create([
+                'projectId' => $r->projectId,
+                'n_factura' => $r->numero_factura[$i],
+                'fecha_factura' => $r->fecha_factura[$i],
+                'fecha_vencimiento' => $r->fecha_vencimiento[$i],
+                'fecha_pagoreal' => $r->fecha_pagoreal[$i],
+                'moneda' => $r->moneda[$i],
+                'monto' => $r->monto[$i]
+            ]);
+        return '<script>alert("Cronograma guardado correctamente");location.href="'.route('project', [
+            'regionId' => $project->regionId,
+            'countryId' => $project->countryId,
+            'projectId' => $project->id
+        ]).'"</script>';
     }
     private function create_default_directory($root, $subdirs, $week, $projectId) {
         $create     =   Directory::create([

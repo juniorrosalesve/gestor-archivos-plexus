@@ -25,6 +25,9 @@
                         <li>{{ $project->name }}</li>
                     </ul>
                 </div>
+                <div>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer" onclick="location.href='{{ url('dashboard') }}?projectId={{ $project->id }}'"><title>Estadísticas de este proyecto</title><path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z" /></svg>
+                </div>
             </div>
             <hr />
             <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
@@ -67,7 +70,7 @@
                         <ul class="menu menu-xs bg-primary rounded-lg max-w-full w-full">
                             @foreach ($dirs as $dir)
                                 @if ($dir->route == 0 && $dir->link == 0)
-                                    <li id="dir_{{ $dir->id }}" onclick="navigate({{ $dir->route }}, {{ $dir->id }})">
+                                    <li id="dir_{{ $dir->id }}" onclick="navigate('{{ $dir->name }}', {{ $dir->route }}, {{ $dir->id }})">
                                         <details>
                                             <summary>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -164,12 +167,112 @@
             <button>close</button>
         </form>
     </dialog>
+    <dialog id="modal_managerCronograma" class="modal">
+        <div method="dialog" class="modal-box min-w-[1200px]">
+            <h3 class="font-bold text-lg mb-3">Cronograma de pagos</h3>
+            <hr />
+            <div class="float-right mt-2 mr-1">
+                <span class="btn btn-xs btn-success" onclick="addInputCronograma()">Añadir</span>
+            </div>
+            <div class="w-full h-full mt-12">
+                <form action="{{ route('update-cronograma') }}" method="POST" id="inputCronograma">
+                    @csrf
+                    @foreach ($cronogramas as $item)
+                        <div class="grid grid-cols-6 gap-4">
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">N° Factura <i class="text-red-500">*</i></span>
+                                </label> 
+                                <input type="text" value="{{ $item->n_factura }}" name="numero_factura[]" class="input input-bordered" autocomplete="off" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Fecha Factura <i class="text-red-500">*</i></span>
+                                </label> 
+                                <input type="date" value="{{ $item->fecha_factura }}" name="fecha_factura[]" class="input input-bordered" autocomplete="off" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Fecha vencimiento <i class="text-red-500">*</i></span>
+                                </label> 
+                                <input type="date" value="{{ $item->fecha_vencimiento }}" name="fecha_vencimiento[]" class="input input-bordered" autocomplete="off" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Fecha pago real</span>
+                                </label> 
+                                <input type="date" value="{{ $item->fecha_pagoreal }}" name="fecha_pagoreal[]" class="input input-bordered" autocomplete="off" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Moneda <i class="text-red-500">*</i></span>
+                                </label> 
+                                <input type="text" value="{{ $item->moneda }}" name="moneda[]" class="input input-bordered" autocomplete="off" required>
+                            </div>
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text">Monto <i class="text-red-500">*</i></span>
+                                    {{-- <span class="btn btn-xs btn-error float-right -mt-1" onclick="removeInputCronograma()">x</span> --}}
+                                </label> 
+                                <input type="number" value="{{ $item->monto }}" name="monto[]" class="input input-bordered" autocomplete="off" required>
+                            </div>
+                        </div>
+                    @endforeach
+                    <input type="hidden" name="projectId" value="{{ $project->id }}">
+                </form>
+                <button type="button" class="btn btn-success btn-sm mt-4" onclick="submitCronograma()">Guardar cronograma</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+    <!-- cronograma form input --> 
+    <div class="grid grid-cols-6 gap-4 hidden" id="clonateCronograma">
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">N° Factura <i class="text-red-500">*</i></span>
+            </label> 
+            <input type="text" name="numero_factura[]" class="input input-bordered" autocomplete="off" required>
+        </div>
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Fecha Factura <i class="text-red-500">*</i></span>
+            </label> 
+            <input type="date" name="fecha_factura[]" class="input input-bordered" autocomplete="off" required>
+        </div>
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Fecha vencimiento <i class="text-red-500">*</i></span>
+            </label> 
+            <input type="date" name="fecha_vencimiento[]" class="input input-bordered" autocomplete="off" required>
+        </div>
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Fecha pago real</span>
+            </label> 
+            <input type="date" name="fecha_pagoreal[]" class="input input-bordered" autocomplete="off" required>
+        </div>
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Moneda <i class="text-red-500">*</i></span>
+            </label> 
+            <input type="text" name="moneda[]" class="input input-bordered" autocomplete="off" required>
+        </div>
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Monto <i class="text-red-500">*</i></span>
+                {{-- <span class="btn btn-xs btn-error float-right -mt-1" onclick="removeInputCronograma()">x</span> --}}
+            </label> 
+            <input type="number" name="monto[]" class="input input-bordered" autocomplete="off" required>
+        </div>
+    </div>
     <script>
         let sendingRequest      =   false;
         let fileActualPreview   =   'image';
         $("#preview_UrlFile").hide();
 
-        function navigate(route, id, weekFrom = 0, weekTo = 0) {
+        function navigate(name, route, id, weekFrom = 0, weekTo = 0) {
             const detailsId =   "#dir_"+id+" details"
             const url       =   '{{ url("/projects/navigate") }}?projectId={{ $project->id }}&route='+route+'&link='+id;
             const isOpen    =   $(detailsId).attr('open');
@@ -184,15 +287,18 @@
                         const data  =   res.data;
                         if($(detailsId+" ul").length) 
                             $(detailsId+" ul").remove();
-                        let prepareAppend   =   '<ul id="dir_id_'+id+'">';
-                        prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
+                        let prepareAppend       =   '<ul id="dir_id_'+id+'">';
+                        if(name == 'Cronograma de pagos')
+                            prepareAppend   +=  '<li onclick="managerCronograma();" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Gestionar cronograma</li>';
+                        else
+                            prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
                         if(data.length > 0) {
                             for(var i = 0; i < data.length; i++) {
                                 if(data[i].type == 'directory') {
                                     if({{ $weekActual }} > data[i].week_from)
                                         prepareAppend   +=      '<li id="dir_'+data[i].id+'" class="text-red-600" onclick="navigate('+data[i].route+', '+data[i].id+')">';
                                     else
-                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate('+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
+                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
                                     prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
                                     if(data[i].week_to == 0)
                                         prepareAppend   +=      data[i].name+' [ '+data[i].week_from+' ]';
@@ -272,6 +378,18 @@
             }
             fileActualPreview   =   type;
             modal_previewFile.showModal();
+        }
+        function managerCronograma() {
+            modal_managerCronograma.showModal();
+        }
+        function addInputCronograma() {
+            const modelInput    =   document.getElementById('clonateCronograma');
+            const getForm       =   document.getElementById('inputCronograma');
+            let newInput    =   getForm.appendChild(modelInput.cloneNode(true));
+            newInput.classList.remove('hidden');
+        }
+        function submitCronograma() {
+            $("#inputCronograma").submit();
         }
 
         $("#formAddDir").submit(function(e){

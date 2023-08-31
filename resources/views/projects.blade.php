@@ -19,6 +19,7 @@
                             <td>Semanas</td>
                             <td>Fecha final</td>
                             <td>Semana actual</td>
+                            <td>A tiempo</td>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,6 +48,11 @@
                                         echo $weekActual;
                                     @endphp
                                 </td>
+                                @if ($project->bad == true)
+                                    <td class="bg-red-200">No</td>
+                                @else
+                                    <td>Sí</td>
+                                @endif
                             </tr>
                         @endforeach
                     </tbody>

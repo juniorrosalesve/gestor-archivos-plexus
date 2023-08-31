@@ -9,12 +9,16 @@ use App\Models\Project;
 use App\Models\Directory;
 use App\Models\Region;
 use App\Models\Country;
+use App\Models\Cronograma;
 
 class DashboardController extends Controller
 {
     public function index(Request $r) {
-        $region     =   null;
-        $country    =   null;
+        $region         =   null;
+        $country        =   null;
+        $chartProject   =   0;
+        if($r->has('projectId'))
+            $chartProject   =   $r->projectId;
         if($r->has('region') && $r->has('country')) {
             if($r->region > 0)
                 $region     =   Region::find($r->region);
@@ -33,34 +37,42 @@ class DashboardController extends Controller
         if($region != null && $country != null)
             $projects   =   Project::where('regionId', $region->id)->where('countryId', $country->id)->get();
         return view('dashboard', [
-            'financiera_chart' => $this->generateChart("Admin. / Financiera", $r->region, $r->country),
-            'operativa_chart' => $this->generateChart("Operativa", $r->region, $r->country),
-            'estrategica_tactica_chart' => $this->generateChart("Estratégica / Táctica", $r->region, $r->country),
-            'gestion_humana_chart' => $this->generateChart("Gestión Humana", $r->region, $r->country),
+            'financiera_chart' => $this->generateChart("Admin. / Financiera", $r->region, $r->country, $r->chartProject),
+            'operativa_chart' => $this->generateChart("Operativa", $r->region, $r->country, $r->chartProject),
+            'estrategica_tactica_chart' => $this->generateChart("Estratégica / Táctica", $r->region, $r->country, $r->chartProject),
+            'gestion_humana_chart' => $this->generateChart("Gestión Humana", $r->region, $r->country, $r->chartProject),
 
             'projects_opens' => $this->getProjectsOpen($r->region, $r-> country),
+            'facturas_vencidas' => $this->getFechaFacturasVencidas(),
             'regions' => Region::all(),
             'countries' => $countries,
             'projects' => $projects,
             'region' => $region,
             'country' => $country,
-            'jsCountries' => Country::all()
+            'jsCountries' => Country::all(),
+
+            'chartProject' => ($chartProject > 0 ? true : false),
+            'chartProjectData' => ($chartProject > 0 ? Project::find($chartProject) : false)
         ]);
     }
 
     public function viewProjectOpens($region, $country) {
         return view('projects', [
-            'projects' => $this->getProjectsOpen($region, $country)
+            'projects' => $this->getProjectsOpen($region, $country, true)
         ]);
     }
 
-    private function generateChart($rootName, $region, $country) {
-        if($region == 0 && $country == 0)
-            $projects   =   Project::all();
-        if($region != 0 && $country == 0)
-            $projects   =   Project::where('regionId', $region)->get();
-        if($region != 0 && $country != 0)
-            $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
+    private function generateChart($rootName, $region, $country, $projectId = 0) {
+        if($projectId == 0) {
+            if($region == 0 && $country == 0)
+                $projects   =   Project::all();
+            if($region != 0 && $country == 0)
+                $projects   =   Project::where('regionId', $region)->get();
+            if($region != 0 && $country != 0)
+                $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
+        }
+        else
+            $projects   =   Project::where('id', $projectId)->get();
         $result     =   [];
         if(sizeof($projects) == 0) {
             $porcentaje     =   [];
@@ -86,6 +98,7 @@ class DashboardController extends Controller
             for($x = 0; $x < sizeof($dirs); $x++)
             {  
                 $dir    =   $dirs[$x];
+                
                 if($i+1 == sizeof($projects))
                     $result["keys"][$x]   =   $dir->name;
                 if($dir->type == 'directory' && $dir->week_from > 0)
@@ -138,7 +151,7 @@ class DashboardController extends Controller
 
                         $diff   =   $endDate->diff($startDate);
                         $nWeek  =   (floor($diff->days / 7)+1);
-                        if($weeks > $nWeek && $dir->week_from < $weeks)
+                        if($dir->week_from < $weeks)
                             $result[$i]["bad"][$x]      =   ['key' => $dir->name, 'value' => 1];
                         else
                             $result[$i]["ok"][$x]       =   ['key' => $dir->name, 'value' => 1];
@@ -217,7 +230,7 @@ class DashboardController extends Controller
         return $porcentaje;
     }
 
-    private function getProjectsOpen($region, $country) {
+    private function getProjectsOpen($region, $country, $list = false) {
         if($region == 0 && $country == 0)
             $projects   =   Project::all();
         if($region != 0 && $country == 0)
@@ -225,13 +238,37 @@ class DashboardController extends Controller
         if($region != 0 && $country != 0)
             $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
         $actives    =   [];
-        foreach($projects as $project) {
+        for($i = 0; $i < sizeof($projects); $i++) {
+            $project    =   $projects[$i];
             $now        =   new \DateTime();
             $fTime      =   date('Y-m-d', strtotime($project->inicia."+ ".$project->semanas." week"));
             $finish     =   new \DateTime($fTime);
-            if($now <= $finish)
-                $actives[]  =   $project;
+            if($now <= $finish) {
+                $actives[$i]        =   $project;
+                if($list)
+                    $actives[$i]->bad   =   $this->checkProjectRetrasado($project->id);    
+            }
         }
         return $actives;
+    }
+    public function checkProjectRetrasado($projectId) {
+        $bad    =   false;
+        $f  =   $this->generateChart("Admin. / Financiera", 0, 0, $projectId);
+        $o  =   $this->generateChart("Operativa", 0, 0, $projectId);
+        $e  =   $this->generateChart("Estratégica / Táctica", 0, 0, $projectId);
+        $g  =   $this->generateChart("Gestión Humana", 0, 0, $projectId);
+        if($f['total_bad'] > 0 || $o['total_bad'] > 0 || $e['total_bad'] > 0 || $g['total_bad'] > 0)
+            $bad = true;
+        return $bad;
+    }
+
+    private function getFechaFacturasVencidas() {
+        $cronogramas    =   Cronograma::all();
+        $facturas       =   [];
+        foreach($cronogramas as $item) {
+            if($item->fecha_pagoreal > $item->fecha_vencimiento)
+                $facturas[]     =   $item;
+        }
+        return $facturas;
     }
 }

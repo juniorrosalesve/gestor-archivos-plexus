@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         Route::post('/store-project', [ProyectoController::class, 'store'])->name('store-project');
         Route::post('/update-project', [ProyectoController::class, 'update'])->name('update-project');
+        Route::post('/update-cronorama', [ProyectoController::class, 'update_cronograma'])->name('update-cronograma');
 
         /* AXIOS */
         Route::get('/navigate', [ProyectoController::class, 'navigate'])->name('navigate');
