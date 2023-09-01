@@ -19,8 +19,6 @@
                         <tr>
                             <td>Id</td>
                             <td>Nombre</td>
-                            <td>Tiempo de entrega</td>
-                            <td>Progreso</td>
                         </tr>
                     </thead>
                     <tbody>
@@ -32,14 +30,6 @@
                                     'countryId' => $country->id,
                                     'projectId' => $item->id
                                 ]) }}" class="underline">{{ $item->name }}</a></td>
-                                <td>
-                                    @if ($item->delivery == null)
-                                        <span class="italic">No aplica</span>
-                                    @else
-                                        {{ date('d-m-Y', strtotime($item->delivery)) }}
-                                    @endif
-                                </td>
-                                <td>{{ $item->porcentaje }}%</td>
                             </tr>
                         @endforeach
                     </tbody>

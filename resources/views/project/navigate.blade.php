@@ -25,13 +25,43 @@
                         <li>{{ $project->name }}</li>
                     </ul>
                 </div>
-                <div class="-mt-3">
-                    <p class="text-xs text-center">Progreso {{ $porcentaje }}%</p>
-                    <progress class="progress @if($porcentaje == 100) progress-success @else progress-accent @endif w-56" value="{{ $porcentaje }}" max="100"></progress>
-                </div>
             </div>
             <hr />
-            <div class="overflow-x-auto mt-2">
+            <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
+                <div class="flex flex-col items-center justify-center">
+                    <dt class="mb-2 text-3xl font-extrabold">{{ date("d-m-y", strtotime($project->inicia)) }}</dt>
+                    <dd class="text-gray-500">Fecha de inicio</dd>
+                </div>
+                <div class="flex flex-col items-center justify-center">
+                    <dt class="mb-2 text-3xl font-extrabold">{{ $project->semanas }}</dt>
+                    <dd class="text-gray-500">Semanas</dd>
+                </div>
+                <div class="flex flex-col items-center justify-center">
+                    <dt class="mb-2 text-3xl font-extrabold">
+                        {{ date("d-m-y", strtotime($project->inicia."+ ".$project->semanas." week")) }}
+                    </dt>
+                    <dd class="text-gray-500">Fecha final</dd>
+                </div>
+                <div class="flex flex-col items-center justify-center">
+                    <dt class="mb-2 text-3xl font-extrabold">
+                        @php
+                            $startDate = new DateTime($project->inicia);
+                            $endDate = new DateTime();
+
+                            $diff = $endDate->diff($startDate);
+                            $numberOfWeeks  =   floor($diff->days / 7);
+                            $weekActual     =   $numberOfWeeks+1;
+                            if($weekActual >= $project->semanas)
+                                $weekActual     =   $project->semanas;
+
+                            echo $weekActual
+                        @endphp
+                    </dt>
+                    <dd class="text-gray-500">Semana actual</dd>
+                </div>
+            </dl>
+
+            <div class="overflow-x-auto">
                 <div class="w-full">
                     <div>
                         <ul class="menu menu-xs bg-primary rounded-lg max-w-full w-full">
@@ -55,8 +85,9 @@
             </div>
         </div>
     </div>
-    <dialog id="modal_add_file" class="modal">
-        <div method="dialog" class="modal-box">
+    <input type="checkbox" id="modal_add_file" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box">
             <h3 class="font-bold text-lg">Añadir archivo</h3>
             <form action="{{ route('navigate-add-file') }}" method="POST" id="formAddFile" class="py-4" enctype="multipart/form-data">
                 @csrf
@@ -66,12 +97,12 @@
                     </label> 
                     <input type="text" name="name" class="input input-bordered" autocomplete="off" required>
                 </div>
-                {{-- <div class="form-control">
+                <div class="form-control">
                     <label class="label">
-                        <span class="label-text">Fecha de entrega (opcional)</span>
+                        <span class="label-text">Semana <i class="text-red-500">*</i></span>
                     </label> 
-                    <input type="date" name="delivery" class="input input-bordered" autocomplete="off">
-                </div> --}}
+                    <select name="file_week" class="select select-bordered w-full" id="addFileWeek" required></select>
+                </div>
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Archivo <i class="text-red-500">*</i></span>
@@ -84,14 +115,13 @@
                 <button type="submit" class="btn btn-primary btn-sm mt-10 mb-2 float-right w-[50%]">Añadir</button>
             </form>
         </div>
-        <form method="dialog" class="modal-backdrop">
-            <button>close</button>
-        </form>
-    </dialog>
-    <dialog id="modal_add_dir" class="modal">
-        <div method="dialog" class="modal-box">
+        <label class="modal-backdrop" for="modal_add_file">Close</label>
+    </div>
+    <input type="checkbox" id="modal_add_dir" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box">
             <h3 class="font-bold text-lg">Crear carpeta</h3>
-            <form action="{{ route('navigate-add-dir') }}" method="POST" class="py-4">
+            <form action="{{ route('navigate-add-dir') }}" method="POST" id="formAddDir" class="py-4">
                 @csrf
                 <div class="form-control">
                     <label class="label">
@@ -101,9 +131,9 @@
                 </div>
                 <div class="form-control">
                     <label class="label">
-                        <span class="label-text">Fecha de entrega (opcional)</span>
+                        <span class="label-text">Semanas <i class="text-red-500">*</i></span>
                     </label> 
-                    <input type="date" name="delivery" class="input input-bordered" autocomplete="off">
+                    <input type="text" name="semanas" value="1" class="input input-bordered" autocomplete="off" required>
                 </div>
                 <input type="hidden" name="projectId" value="{{ $project->id }}">
                 <input type="hidden" name="route" id="addDirRoute">
@@ -111,11 +141,9 @@
                 <button type="submit" class="btn btn-primary btn-sm mt-10 mb-2 float-right w-[50%]">Añadir</button>
             </form>
         </div>
-        <form method="dialog" class="modal-backdrop">
-            <button>close</button>
-        </form>
-    </dialog>
-        <dialog id="modal_previewFile" class="modal">
+        <label class="modal-backdrop" for="modal_add_dir">Close</label>
+    </div>
+    <dialog id="modal_previewFile" class="modal">
         <div method="dialog" class="modal-box w-11/12 max-w-5xl">
             <h3 class="font-bold text-lg mb-3" id="preview_NameFile">Name file</h3>
             <div class="float-right -mt-10">
@@ -136,21 +164,12 @@
             <button>close</button>
         </form>
     </dialog>
-    <div id="contextMenu" class="context-menu" style="display: none"> 
-        <ul class="menu"> 
-            <li class="share"><a href="#"><i class="fa fa-share" aria-hidden="true"></i> Nueva carpeta</a></li> 
-            <li class="rename"><a href="#"><i class="fa fa-pencil" aria-hidden="true"></i> Subir archivo</a></li> 
-            <li class="link"><a href="#"><i class="fa fa-link" aria-hidden="true"></i> Previsualizar</a></li> 
-            <li class="download"><a href="#"><i class="fa fa-download" aria-hidden="true"></i> Descargar</a></li> 
-            <li class="trash"><a href="#"><i class="fa fa-trash" aria-hidden="true"></i> Eliminar</a></li> 
-        </ul> 
-    </div> 
     <script>
         let sendingRequest      =   false;
         let fileActualPreview   =   'image';
         $("#preview_UrlFile").hide();
 
-        function navigate(route, id) {
+        function navigate(route, id, weekFrom = 0, weekTo = 0) {
             const detailsId =   "#dir_"+id+" details"
             const url       =   '{{ url("/projects/navigate") }}?projectId={{ $project->id }}&route='+route+'&link='+id;
             const isOpen    =   $(detailsId).attr('open');
@@ -163,29 +182,29 @@
                 .then(function(res) {
                     if(res.status == 200) {
                         const data  =   res.data;
-                        if($(detailsId+" ul").length) {
+                        if($(detailsId+" ul").length) 
                             $(detailsId+" ul").remove();
-                            console.log('debería eliminar');
-                        }
-                        let prepareAppend   =   '<ul>';
-                        prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
+                        let prepareAppend   =   '<ul id="dir_id_'+id+'">';
+                        prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
                         if(data.length > 0) {
                             for(var i = 0; i < data.length; i++) {
                                 if(data[i].type == 'directory') {
-                                    console.log(data[i]);
-                                    prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate('+data[i].route+', '+data[i].id+')">';
-                                    prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
-                                    if(data[i].required > 0)
-                                        prepareAppend   +=      data[i].name+' ('+data[i].registers+'/'+data[i].required+')</summary></details></li>';
+                                    if({{ $weekActual }} > data[i].week_from)
+                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" class="text-red-600" onclick="navigate('+data[i].route+', '+data[i].id+')">';
                                     else
-                                        prepareAppend   +=      data[i].name+'</summary></details></li>';
+                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate('+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
+                                    prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
+                                    if(data[i].week_to == 0)
+                                        prepareAppend   +=      data[i].name+' [ '+data[i].week_from+' ]';
+                                    else
+                                        prepareAppend   +=      data[i].name+' [ '+data[i].week_from+'-'+data[i].week_to+' ]';
+                                    prepareAppend   +=      '</summary></details></li>';
                                 }
                             }
                             for(var i = 0; i < data.length; i++) {
                                 if(data[i].type != 'directory') {
-                                    // prepareAppend   +=  '<li><a href="{{ url("/storage/plexus") }}/'+data[i].file_path+'" target="_blank">';
                                     prepareAppend   +=  '<li><a href="javascript:void(0);" onclick="openModalPreviewFile(\''+data[i].name+'\', \''+data[i].file_path+'\', \''+data[i].type+'\')">';
-                                    if(data[i].type == 'docs')
+                                    if(data.type !== 'image')
                                         prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
                                     else
                                         prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>';
@@ -211,15 +230,26 @@
                     let isOpen   =   $("#dir_"+id+" details").removeAttr('open');
                 });
         }
-        function openModalAddFile(route, id) {
-            modal_add_file.showModal();
+        function openModalAddFile(route, id, weekFrom, weekTo) {
             $("#addFileRoute").val((route+1));
             $("#addFileLink").val(id);
+            let selectWeek  =   '<option value="" disabled selected>Elige una semana</option>';
+            if(weekTo == 0) {
+                if(weekFrom > 0)
+                    selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>';
+            }
+            else {
+                for(weekFrom; weekFrom <= weekTo; weekFrom++)
+                    selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>'
+            }
+            $("#addFileWeek").html(selectWeek);
+            document.getElementById('modal_add_file').checked = true;
         }
         function openModalAddDir(route, id) {
-            modal_add_dir.showModal();
+            // modal_add_dir.showModal();
             $("#addDirRoute").val((route+1));
             $("#addDirLink").val(id);
+            document.getElementById('modal_add_dir').checked = true;
         }
         function openModalPreviewFile(name, file_path, type) {
             $("#preview_NameFile").html(name);
@@ -243,5 +273,63 @@
             fileActualPreview   =   type;
             modal_previewFile.showModal();
         }
+
+        $("#formAddDir").submit(function(e){
+            e.preventDefault();
+            const data  =   new FormData(this);
+            axios.post('{{ route("navigate-add-dir") }}', data)
+                .then(function(res) {
+                    if(res.status == 200)
+                    {
+                        const data  =   res.data;
+                        let prepareAppend   =   '';
+                        if({{ $weekActual }} > data.week_from)
+                            prepareAppend   +=      '<li id="dir_'+data.id+'" class="text-red-600" onclick="navigate('+data.route+', '+data.id+')">';
+                        else
+                            prepareAppend   +=      '<li id="dir_'+data.id+'" onclick="navigate('+data.route+', '+data.id+', '+data.week_from+', '+data.week_to+')">';
+                        prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
+                        if(data.week_to == 0)
+                            prepareAppend   +=      data.name+' [ '+data.week_from+' ]';
+                        else
+                            prepareAppend   +=      data.name+' [ '+data.week_from+'-'+data.week_to+' ]';
+                        prepareAppend   +=      '</summary></details></li>';
+                        $("#dir_id_"+data.link).append(prepareAppend);
+                        document.getElementById('modal_add_dir').checked = false;
+                    }
+                })
+                .catch(function(err) {
+                    console.log(err);
+                });
+        });
+
+        $("#formAddFile").submit(function(e) {
+            e.preventDefault();
+            const data      =   new FormData(this);
+            const config    =   {
+                headers: {
+                    'content-type': 'multipart/form-data'
+                }
+            }
+            axios.post('{{ route("navigate-add-file") }}', data, config)
+                .then(function(res) {
+                    if(res.status == 200)
+                    {
+                        const data  =   res.data;
+                        let prepareAppend   =  '<li><a href="javascript:void(0);" onclick="openModalPreviewFile(\''+data.name+'\', \''+data.file_path+'\', \''+data.type+'\')">';
+                        if(data.type !== 'image')
+                            prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
+                        else
+                            prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>';
+                        prepareAppend   +=  data.name+'.'+data.file_ext;
+                        prepareAppend   +=  '</a></li>'
+
+                        $("#dir_id_"+data.link).append(prepareAppend);
+                        document.getElementById('modal_add_file').checked = false;
+                    }
+                })
+                .catch(function(err) {
+                    console.log(err);
+                });
+        });
     </script>
 @endsection

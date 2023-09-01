@@ -14,7 +14,8 @@ class Project extends Model
         'regionId',
         'countryId',
         'managerId',
-        'delivery'
+        'inicia',
+        'semanas'
     ];
 
     public function region() {

@@ -23,27 +23,15 @@ class ProyectoController extends Controller
         return view('project.create', [
             'regions' => Region::orderBy('name', 'asc')->get(),
             'countries' => Country::orderBy('name', 'asc')->get(),
-            'gerentes' => User::where('access', 'g')->orderBy('name', 'asc')->get()
+            'gerentes' => User::where('access', 'g')->orderBy('name', 'asc')->get(),
+            'financiera' => $this->financiera,
+            'operativa' => $this->operativa,
+            'estrategica_tactica' => $this->estrategica_tactica,
+            'gestion_humana' => $this->gestion_humana
         ]);
     }
     public function projects($regionId, $countryId) {
         $projects   =   Project::where('regionId', $regionId)->where('countryId', $countryId)->get();
-        for($i = 0; $i < sizeof($projects); $i++) {
-            $dirs   =   $projects[$i]->directories;
-            $requireds  =   0;
-            $registers  =   0;
-            for($x = 0; $x < sizeof($dirs); $x++) {
-                if($dirs[$x]['type'] == 'directory')
-                {
-                    if($dirs[$x]['required'] != 0) {
-                        $dirs[$x]['registers']  =   Directory::where('type', '!=', 'directory')->where('link', $dirs[$x]['id'])->count();
-                        $requireds  +=  $dirs[$x]['required'];
-                        $registers  +=  $dirs[$x]['registers'];
-                    }
-                }
-            }
-            $projects[$i]['porcentaje']     =   round(($registers*100)/$requireds, 2);
-        }
         return view('project.project', [
             'region' => Region::find($regionId),
             'country' => Country::find($countryId),
@@ -52,98 +40,73 @@ class ProyectoController extends Controller
     }
     public function project($regionId, $countryId, $projectId) {
         $dirs       =   Directory::where('projectId', $projectId)->where('route', 0)->get();
-        $subdirs    =   Directory::where('projectId', $projectId)->where('route', '>=', 1)->get();
-        $requireds  =   0;
-        $registers  =   0;
-        for($i = 0; $i < sizeof($subdirs); $i++) {
-            if($subdirs[$i]['type'] == 'directory')
-            {
-                if($subdirs[$i]['required'] != 0) {
-                    $subdirs[$i]['registers']  =   Directory::where('type', '!=', 'directory')->where('link', $subdirs[$i]['id'])->count();
-                    $requireds  +=  $subdirs[$i]['required'];
-                    $registers  +=  $subdirs[$i]['registers'];
-                }
-            }
-        }
-        $porcentaje     =   round(($registers*100)/$requireds, 2);
         return view('project.navigate', [
             'region' => Region::find($regionId),
             'country' => Country::find($countryId),
             'project' => Project::find($projectId),
-            'dirs' => $dirs,
-            'porcentaje' => $porcentaje
+            'dirs' => $dirs
         ]);
     }
 
     public function store(Request $r) {
-        $store  =   Project::create($r->except('_token'));
-        $rootDir    =   Directory::create([
-            'projectId' => $store->id,
-            'name' => 'Admin. / Financiera'
-        ]);
-        for($i = 0; $i < sizeof($this->financiera); $i++)
-            Directory::create([
-                'projectId' => $store->id,
-                'name' => $this->financiera[$i],
-                'route' => 1,
-                'link' => $rootDir->id
-            ]);
-        $rootDir    =   Directory::create([
-            'projectId' => $store->id,
-            'name' => 'Operativa'
-        ]);
-        for($i = 0; $i < sizeof($this->operativa); $i++)
-            Directory::create([
-                'projectId' => $store->id,
-                'name' => $this->operativa[$i],
-                'route' => 1,
-                'link' => $rootDir->id
-            ]);
+        $store  =   Project::create($r->except([
+            '_token',
+            'financiera',
+            'financiera_week',
+            'operativa',
+            'operativa_week',
+            'estrategica_tactica',
+            'estrategica_tactica_week',
+            'gestion_humana',
+            'gestion_humana_week'
+        ]));
 
-        $rootDir    =   Directory::create([
-            'projectId' => $store->id,
-            'name' => 'Estratégica / Táctica'
-        ]);
-        for($i = 0; $i < sizeof($this->estrategica_tactica); $i++)
-            Directory::create([
-                'projectId' => $store->id,
-                'name' => $this->estrategica_tactica[$i],
-                'route' => 1,
-                'link' => $rootDir->id
-            ]);
-        $rootDir    =   Directory::create([
-            'projectId' => $store->id,
-            'name' => 'Gestión Humana'
-        ]);
-        for($i = 0; $i < sizeof($this->gestion_humana); $i++)
-            Directory::create([
-                'projectId' => $store->id,
-                'name' => $this->gestion_humana[$i],
-                'route' => 1,
-                'link' => $rootDir->id
-            ]);
+        $this->create_default_directory('Admin. / Financiera', $r->financiera, $r->financiera_week, $store->id);
+        $this->create_default_directory('Operativa', $r->operativa, $r->operativa_week, $store->id);
+        $this->create_default_directory('Estratégica / Táctica', $r->estrategica_tactica, $r->estrategica_tactica_week, $store->id);
+        $this->create_default_directory('Gestión Humana', $r->gestion_humana, $r->gestion_humana_week, $store->id);
+
         return "<script>alert('Proyecto creado correctamente!');location.href='".route('projects', [
             'regionId' => $store->regionId,
             'countryId' => $store->countryId
         ])."'</script>";
     }
+    private function create_default_directory($root, $subdirs, $week, $projectId) {
+        $create     =   Directory::create([
+            'projectId' => $projectId,
+            'name' => $root
+        ]);
+        for($i = 0; $i < sizeof($subdirs); $i++)
+        {
+            $weeks      =   explode("-", $week[$i]);
+            $week_from  =   $weeks[0];
+            $week_to    =   0;
+            if(sizeof($weeks) > 1)
+                $week_to    =   $weeks[1];
+            Directory::create([
+                'projectId' => $projectId,
+                'name' => $subdirs[$i],
+                'route' => 1,
+                'link' => $create->id,
+                'week_from' => $week_from,
+                'week_to' => $week_to
+            ]);
+        }
+    }
 
     /* Axios callback */
     public function navigate(Request $r) {
-        // return json_encode($r->all());
         $dirs   =   Directory::where('projectId', $r->projectId)->where('route', ($r->route+1))->where('link', $r->link)->get();
-        for($i = 0; $i < sizeof($dirs); $i++) {
-            if($dirs[$i]['type'] == 'directory')
-            {
-                if($dirs[$i]['required'] != 0)
-                    $dirs[$i]['registers']  =   Directory::where('type', '!=', 'directory')->where('link', $dirs[$i]['id'])->count();
-            }
-        }
         return $dirs->toJson();
     }
     public function navigateAddDir(Request $r) {
-        Directory::create($r->except('_token'));
-        return "<script>alert('Carpeta creada correctamente!');location.href='".url()->previous()."'</script>";
+        $data   =   $r->except(['_token', 'semanas']);
+        $weeks      =   explode("-", $r->semanas);
+        $data['week_from']  =   $weeks[0];
+        $data['week_to']    =   0;
+        if(sizeof($weeks) > 1)
+            $data['week_to']    =   $weeks[1];
+        return Directory::create($data)->toJson();
     }
     public function navigateAddFile(Request $r) {
         $imageExtensions = ['jpg', 'jpeg', 'gif', 'png', 'bmp', 'svg', 'svgz', 'cgm', 'djv', 'djvu', 'ico', 'ief','jpe', 'pbm', 'pgm', 'pnm', 'ppm', 'ras', 'rgb', 'tif', 'tiff', 'wbmp', 'xbm', 'xpm', 'xwd'];
@@ -158,8 +121,8 @@ class ProyectoController extends Controller
         $r->file('file')->storeAs(
             'public/plexus', $fileName
         );
-        Directory::create($data);
-        return "<script>alert('Archivo subido correctamente!');location.href='".url()->previous()."'</script>";
+        return Directory::create($data)->toJson();
+        // return "<script>alert('Archivo subido correctamente!');location.href='".url()->previous()."'</script>";
     }
 
 

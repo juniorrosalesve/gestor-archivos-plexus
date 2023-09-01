@@ -14,9 +14,9 @@ class DirectorySeeder extends Seeder
      */
     public function run(): void
     {
-        $this->test(1);
-        $this->test(2);
-        $this->test(3);
+        // $this->test(1);
+        // $this->test(2);
+        // $this->test(3);
     }
     private function test($projectId) {
         $financiera     =   [

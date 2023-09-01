@@ -20,7 +20,8 @@ return new class extends Migration
             $table->foreign('countryId')->references('id')->on('countries');
             $table->unsignedBigInteger('managerId');
             $table->foreign('managerId')->references('id')->on('users');
-            $table->date('delivery')->nullable();
+            $table->date('inicia');
+            $table->integer('semanas');
             $table->timestamps();
         });
     }

@@ -21,7 +21,9 @@ return new class extends Migration
             $table->string('file_path')->nullable();
             $table->string('file_ext')->nullable();
             $table->string('type')->default('directory');
-            $table->integer('required')->default(0); // archivos requeridos, unicamente para sub-carpetas.
+            $table->integer('week_from')->default(0);
+            $table->integer('week_to')->default(0);
+            $table->integer('file_week')->default(0);
             $table->timestamps();
         });
     }

@@ -29,11 +29,13 @@
                 <table class="w-full" id="table">
                     <thead>
                         <th>Nombre</th>
+                        <th>E-mail</th>
                     </thead>
                     <tbody>
                         @foreach ($users as $user)
                             <tr>
                                 <td>{{ $user->name }}</td>
+                                <td>{{ $user->email }}</td>
                             </tr>
                         @endforeach
                     </tbody>

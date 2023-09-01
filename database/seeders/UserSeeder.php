@@ -21,16 +21,28 @@ class UserSeeder extends Seeder
             'access' => 'a'
         ]);
         User::create([
-            'name' => 'Domingo Conrrado',
-            'email' => 'dominic@admin.com',
+            'name' => 'Arturo Kimura',
+            'email' => 'arturo@admin.com',
             'password' => bcrypt('12'),
             'access' => 'd'
         ]);
         User::create([
-            'name' => 'Juan Gomez',
-            'email' => 'juan@admin.com',
+            'name' => 'Christian Espinosa',
+            'email' => 'christian@admin.com',
             'password' => bcrypt('12'),
-            'access' => 'g'
+            'access' => 'd'
+        ]);
+        User::create([
+            'name' => 'Manuel Meza',
+            'email' => 'manuel@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'd'
+        ]);
+        User::create([
+            'name' => 'Antelmo',
+            'email' => 'antelmo@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'd'
         ]);
     }
 }

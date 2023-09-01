@@ -17,6 +17,8 @@ class Directory extends Model
         'file_path',
         'file_ext',
         'type',
-        'required'
+        'week_from',
+        'week_to',
+        'file_week'
     ];
 }

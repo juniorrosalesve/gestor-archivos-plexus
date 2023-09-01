@@ -22,4 +22,8 @@ class Region extends Model
     public function countries() {
         return $this->hasMany('App\Models\Country', 'regionId');
     }
+
+    public function country() {
+        return $this->belongsTo('App\Models\Country', 'regionId');
+    }
 }

@@ -5,27 +5,449 @@
         <div class="card-body">
             <div class="flex justify-between my-4">
                 <div>
-                    <h2 class="text-2xl inline-block">Dashboard</h2>
+                    <label for="my-drawer-2" class="my-auto btn btn-primary btn-sm drawer-button">Panel</label> 
+                    <h2 class="text-2xl inline-block my-auto ml-3">Dashboard</h2>
+                </div>
+                <div>
+                    <select class="select select-bordered" id="eligeRegion" onchange="selectRegion(this)">
+                        <option value="" disabled selected>Elige una región</option>
+                        @foreach ($regions as $item)
+                            <option value="{{ $item->id }}">{{ $item->name }} - {{ $item->user->name }}</option>
+                        @endforeach
+                    </select>
+                    <select class="select select-bordered mx-3" id="eligePais" onchange="selectPais(this)"></select>
+                    <button type="button" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6"><title>magnify</title><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+                    </button>
                 </div>
             </div>
             <hr />
             <div class="overflow-x-auto mt-2">
-                <div class="grid grid-cols-1">
-                    <div>
-                        <h1 class="text-lg mb-3">Algunos registros</h1>
-                        <table class="w-full" id="table">
-                            <thead>
-                                <td>#</td>
-                                <td>Nombre</td>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
+                    <div class="flex flex-col items-center justify-center bg-base-200 p-3 rounded cursor-pointer" onclick="location.href='{{ route('dashboard-projects') }}'">
+                        <dt class="mb-2 text-3xl font-extrabold">{{ sizeof($projects_opens) }}</dt>
+                        <dd class="text-gray-500 text-center">Proyectos abiertos</dd>
                     </div>
-                    <div>
-                        <canvas id="myChart"></canvas>
+                    <div class="flex flex-col items-center justify-center bg-base-200 p-3 rounded cursor-pointer">
+                        <dt class="mb-2 text-3xl font-extrabold">{{ sizeof($regions) }}</dt>
+                        <dd class="text-gray-500 text-center">Total de regiones</dd>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-base-200 p-3 rounded cursor-pointer">
+                        <dt class="mb-2 text-3xl font-extrabold">{{ sizeof($countries) }}</dt>
+                        <dd class="text-gray-500 text-center">Total paises</dd>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-base-200 p-3 rounded cursor-pointer">
+                        <dt class="mb-2 text-3xl font-extrabold">{{ sizeof($projects) }}</dt>
+                        <dd class="text-gray-500 text-center">Total proyectos</dd>
+                    </div>
+                </dl>
+                <div class="mt-10">
+                    <div class="grid grid-cols-2">
+                        <div class="w-[350px] mx-auto my-auto">
+                            <canvas id="cumplimiento_por_root"></canvas>
+                        </div>
+                        <div class="w-[600px] mx-auto my-auto" id="div_cumplimiento_por_root_1">
+                            <canvas id="cumplimiento_por_root_1"></canvas>
+                        </div>
+                        <div class="w-[600px] mx-auto my-auto hidden" id="div_cumplimiento_por_root_2">
+                            <canvas id="cumplimiento_por_root_2"></canvas>
+                        </div>
+                        <div class="w-[600px] mx-auto my-auto hidden" id="div_cumplimiento_por_root_3">
+                            <canvas id="cumplimiento_por_root_3"></canvas>
+                        </div>
+                        <div class="w-[600px] mx-auto my-auto hidden" id="div_cumplimiento_por_root_4">
+                            <canvas id="cumplimiento_por_root_4"></canvas>
+                        </div>
+                    </div>
+                    <div class="w-full mx-auto" id="div_cumplimiento_por_subdirs_1">
+                        <canvas id="cumplimiento_por_subdirs_1"></canvas>
+                    </div>
+                    <div class="w-full mx-auto hidden" id="div_cumplimiento_por_subdirs_2">
+                        <canvas id="cumplimiento_por_subdirs_2"></canvas>
+                    </div>
+                    <div class="w-full mx-auto hidden" id="div_cumplimiento_por_subdirs_3">
+                        <canvas id="cumplimiento_por_subdirs_3"></canvas>
+                    </div>
+                    <div class="w-full mx-auto hidden" id="div_cumplimiento_por_subdirs_4">
+                        <canvas id="cumplimiento_por_subdirs_4"></canvas>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const categories    =   document.getElementById('cumplimiento_por_root');
+        var barColors = [
+            "rgb(147 197 253)",
+            "rgb(156 163 175)",
+            "rgb(254 240 138)",
+            "rgb(134 239 172)"
+        ];
+
+        Chart.defaults.font.size = 12;
+
+        new Chart("cumplimiento_por_root_1", {
+            type: 'bar',
+            data: {
+                labels: ["In time", "Out time"],
+                datasets: [
+                    {
+                        label: 'Admin. / Financiera',
+                        data: [{{ $financiera_chart['total_ok'] }}, {{ $financiera_chart['total_bad'] }}],
+                        backgroundColor:["rgb(134 239 172)", "rgb(252 165 165)"],
+                        borderWidth: 1
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(value, index, values) {
+                                return value + " %";
+                            }            
+                        }
+                    }
+                }
+            },
+        });
+        new Chart("cumplimiento_por_subdirs_1", {
+            type: 'bar',
+            data: {
+                labels: @json($financiera_chart['keys']),
+                datasets: [
+                    {
+                        label: 'In Time',
+                        data: @json($financiera_chart['total_sub_ok']),
+                        backgroundColor:"rgb(134 239 172)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Out Time',
+                        data: @json($financiera_chart['total_sub_bad']),
+                        backgroundColor:"rgb(252 165 165)",
+                        borderWidth: 1
+                    },
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                // Elements options apply to all of the options unless overridden in a dataset
+                // In this case, we are setting the border of each horizontal bar to be 2px wide
+                elements: {
+                    bar: {
+                        borderWidth: 2,
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cumplimiento en % de la categoría FINANCIERA'
+                    }
+                },
+                scales: {
+                    x: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(value, index, values) {
+                                return value + " %";
+                            }            
+                        }
+                    }
+                }
+            },
+        });
+
+        new Chart("cumplimiento_por_root_2", {
+            type: 'bar',
+            data: {
+                labels: ["In time", "Out time"],
+                datasets: [
+                    {
+                        label: 'Operativa',
+                        data: [{{ $operativa_chart['total_ok'] }}, {{ $operativa_chart['total_bad'] }}],
+                        backgroundColor:["rgb(134 239 172)", "rgb(252 165 165)"],
+                        borderWidth: 1
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(value, index, values) {
+                                return value + " %";
+                            }            
+                        }
+                    }
+                }
+            },
+        });
+        new Chart("cumplimiento_por_subdirs_2", {
+            type: 'bar',
+            data: {
+                labels: @json($operativa_chart['keys']),
+                datasets: [
+                    {
+                        label: 'In Time',
+                        data: @json($operativa_chart['total_sub_ok']),
+                        backgroundColor:"rgb(134 239 172)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Out Time',
+                        data: @json($operativa_chart['total_sub_bad']),
+                        backgroundColor:"rgb(252 165 165)",
+                        borderWidth: 1
+                    },
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                // Elements options apply to all of the options unless overridden in a dataset
+                // In this case, we are setting the border of each horizontal bar to be 2px wide
+                elements: {
+                    bar: {
+                        borderWidth: 1,
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cumplimiento en % de la categoría OPERATIVA'
+                    }
+                }
+            },
+        });
+
+
+        new Chart("cumplimiento_por_root_3", {
+            type: 'bar',
+            data: {
+                labels: ["In time", "Out time"],
+                datasets: [
+                    {
+                        label: 'Estratégica / Táctica',
+                        data: [{{ $estrategica_tactica_chart['total_ok'] }}, {{ $estrategica_tactica_chart['total_bad'] }}],
+                        backgroundColor:["rgb(134 239 172)", "rgb(252 165 165)"],
+                        borderWidth: 1
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(value, index, values) {
+                                return value + " %";
+                            }            
+                        }
+                    }
+                }
+            },
+        });
+        new Chart("cumplimiento_por_subdirs_3", {
+            type: 'bar',
+            data: {
+                labels: @json($estrategica_tactica_chart['keys']),
+                datasets: [
+                    {
+                        label: 'In Time',
+                        data: @json($estrategica_tactica_chart['total_sub_ok']),
+                        backgroundColor:"rgb(134 239 172)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Out Time',
+                        data: @json($estrategica_tactica_chart['total_sub_bad']),
+                        backgroundColor:"rgb(252 165 165)",
+                        borderWidth: 1
+                    },
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                // Elements options apply to all of the options unless overridden in a dataset
+                // In this case, we are setting the border of each horizontal bar to be 2px wide
+                elements: {
+                    bar: {
+                        borderWidth: 1,
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cumplimiento en % de la categoría ESTRATÉGICA / TÁCTICAS'
+                    }
+                }
+            },
+        });
+
+        new Chart("cumplimiento_por_root_4", {
+            type: 'bar',
+            data: {
+                labels: ["In time", "Out time"],
+                datasets: [
+                    {
+                        label: 'Gestión Humana',
+                        data: [{{ $gestion_humana_chart['total_ok'] }}, {{ $gestion_humana_chart['total_bad'] }}],
+                        backgroundColor:["rgb(134 239 172)", "rgb(252 165 165)"],
+                        borderWidth: 1
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 10,
+                            callback: function(value, index, values) {
+                                return value + " %";
+                            }            
+                        }
+                    }
+                }
+            },
+        });
+        new Chart("cumplimiento_por_subdirs_4", {
+            type: 'bar',
+            data: {
+                labels: @json($gestion_humana_chart['keys']),
+                datasets: [
+                    {
+                        label: 'In Time',
+                        data: @json($gestion_humana_chart['total_sub_ok']),
+                        backgroundColor:"rgb(134 239 172)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Out Time',
+                        data: @json($gestion_humana_chart['total_sub_bad']),
+                        backgroundColor:"rgb(252 165 165)",
+                        borderWidth: 1
+                    },
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                // Elements options apply to all of the options unless overridden in a dataset
+                // In this case, we are setting the border of each horizontal bar to be 2px wide
+                elements: {
+                    bar: {
+                        borderWidth: 1,
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Cumplimiento en % de la categoría GESTIÓN HUMANA'
+                    }
+                }
+            },
+        });
+
+        const labelsCategories  =   [
+            'Admin. / Financiera',
+            'Operativa',
+            'Estratégica / Táctica',
+            'Gestión Humana'
+        ];
+        chartCategories     =   new Chart(categories, {
+            type: "pie",
+            data: {
+                labels: labelsCategories,
+                datasets: [{
+                    backgroundColor: barColors,
+                    data: [{{ sizeof($projects) }}, {{ sizeof($projects) }}, {{ sizeof($projects) }}, {{ sizeof($projects) }}]
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: "Cumplimiento por categorías en %"
+                }
+            }
+        });
+        let actualShow        =   'Admin. / Financiera';
+        categories.onclick  =   (evt) => {
+            const res = chartCategories.getElementsAtEventForMode(
+                evt,
+                'nearest',
+                { intersect: true },
+                true
+            );
+            // If didn't click on a bar, `res` will be an empty array
+            if (res.length === 0) {
+                return;
+            }
+            const newShow   =   chartCategories.data.labels[res[0].index];
+            if(actualShow != newShow) {
+                console.log(newShow);
+                for(var i = 0; i < labelsCategories.length; i++)
+                {
+                    if(actualShow == labelsCategories[i]) {
+                        $("#div_cumplimiento_por_root_"+(i+1)).addClass('hidden');
+                        $("#div_cumplimiento_por_subdirs_"+(i+1)).addClass('hidden');
+                    }
+                    else {
+                        if(newShow == labelsCategories[i]) {
+                            $("#div_cumplimiento_por_root_"+(i+1)).removeClass('hidden');
+                            $("#div_cumplimiento_por_subdirs_"+(i+1)).removeClass('hidden');
+                        }
+                    }
+                }
+                actualShow  =   newShow;
+            }
+        };
+
+        const paises    =   @json($countries);
+        let isVisible   =   false;
+
+        function selectRegion(e) {
+            const id    =   $(e).val();
+            let countries   =   [];
+            for(var i = 0; i < paises.length; i++) {
+                if(paises[i].regionId == id)
+                    countries.push(paises[i]);
+            }
+            $("#eligePais").html('<option value="" disabled selected>Elige un país</option>');
+            for(var i = 0; i < countries.length; i++) 
+                $("#eligePais").append('<option value="'+countries[i].id+'">'+countries[i].name+'</option>');
+            if(!isVisible) {
+                $("#eligePais").show();
+                isVisible = true;
+            }
+        }
+    </script>
 @endsection
