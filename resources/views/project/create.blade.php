@@ -93,7 +93,7 @@
                                     <label class="label">
                                         <span class="label-text">N° Semana <i class="text-red-500">*</i></span>
                                     </label> 
-                                    <input type="number" name="financiera_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
+                                    <input type="text" name="financiera_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
                                 </div>
                             </div>
                         @endforeach
@@ -114,7 +114,7 @@
                                     <label class="label">
                                         <span class="label-text">N° Semana <i class="text-red-500">*</i></span>
                                     </label> 
-                                    <input type="number" name="operativa_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
+                                    <input type="text" name="operativa_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
                                 </div>
                             </div>
                         @endforeach
@@ -135,7 +135,7 @@
                                     <label class="label">
                                         <span class="label-text">N° Semana <i class="text-red-500">*</i></span>
                                     </label> 
-                                    <input type="number" name="estrategica_tactica_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
+                                    <input type="text" name="estrategica_tactica_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
                                 </div>
                             </div>
                         @endforeach
@@ -157,7 +157,7 @@
                                     <label class="label">
                                         <span class="label-text">N° Semana <i class="text-red-500">*</i></span>
                                     </label> 
-                                    <input type="number" name="gestion_humana_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
+                                    <input type="text" name="gestion_humana_week[]" min="1" value="1" class="input input-bordered" autocomplete="off" required>
                                 </div>
                             </div>
                         @endforeach
