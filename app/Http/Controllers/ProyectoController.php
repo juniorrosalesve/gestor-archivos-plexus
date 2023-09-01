@@ -109,16 +109,18 @@ class ProyectoController extends Controller
     public function update_cronograma(Request $r) {
         $project    =   Project::find($r->projectId);
         Cronograma::where('projectId', $r->projectId)->delete();
-        for($i = 0; $i < sizeof($r->numero_factura); $i++)
-            Cronograma::create([
-                'projectId' => $r->projectId,
-                'n_factura' => $r->numero_factura[$i],
-                'fecha_factura' => $r->fecha_factura[$i],
-                'fecha_vencimiento' => $r->fecha_vencimiento[$i],
-                'fecha_pagoreal' => $r->fecha_pagoreal[$i],
-                'moneda' => $r->moneda[$i],
-                'monto' => $r->monto[$i]
-            ]);
+        if($r->numero_factura != null) {
+            for($i = 0; $i < sizeof($r->numero_factura); $i++)
+                Cronograma::create([
+                    'projectId' => $r->projectId,
+                    'n_factura' => $r->numero_factura[$i],
+                    'fecha_factura' => $r->fecha_factura[$i],
+                    'fecha_vencimiento' => $r->fecha_vencimiento[$i],
+                    'fecha_pagoreal' => $r->fecha_pagoreal[$i],
+                    'moneda' => $r->moneda[$i],
+                    'monto' => $r->monto[$i]
+                ]);
+        }
         return '<script>alert("Cronograma guardado correctamente");location.href="'.route('project', [
             'regionId' => $project->regionId,
             'countryId' => $project->countryId,

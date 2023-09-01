@@ -38,16 +38,16 @@
                     <div class="bg-primary shadow absolute w-full left-0 top-0 p-2">
                         <center><img src="{{ asset('images/logo-plexus.png') }}" width="200"></center>
                     </div>
-                    <li style="margin-top:110px;">
-                        <a href="{{ route('dashboard') }}" @if (\Request::route()->getName() == 'dashboard' || 
-                            \Request::route()->getName() == 'dashboard-projects')
-                            class="bg-base-300 text-secondary-content rounded-lg"
-                        @endif>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6"><title>chart-bar</title><path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z" /></svg>
-                            Dashboard
-                        </a>
-                    </li>
                     @if (Auth::user()->access == 'a')
+                        <li style="margin-top:110px;">
+                            <a href="{{ route('dashboard') }}" @if (\Request::route()->getName() == 'dashboard' || 
+                                \Request::route()->getName() == 'dashboard-projects')
+                                class="bg-base-300 text-secondary-content rounded-lg"
+                            @endif>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6"><title>chart-bar</title><path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z" /></svg>
+                                Dashboard
+                            </a>
+                        </li>
                         <li>
                             <a href="{{ route('project-index') }}" @if (\Request::route()->getName() == 'project-index'
                                 || \Request::route()->getName() == 'projects' || \Request::route()->getName() == 'project' ||
@@ -77,7 +77,7 @@
                             </a>
                         </li>
                     @else 
-                        <li>
+                        <li style="margin-top:110px;">
                             <a href="{{ route('manager-list') }}" @if (\Request::route()->getName() == 'manager-list')
                                 class="bg-base-300 text-secondary-content rounded-lg"
                             @endif>

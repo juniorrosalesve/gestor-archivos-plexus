@@ -14,6 +14,8 @@ use App\Models\Cronograma;
 class DashboardController extends Controller
 {
     public function index(Request $r) {
+        if(\Auth::user()->access != 'a')
+            return redirect()->route('manager-list');
         $region         =   null;
         $country        =   null;
         $chartProject   =   0;

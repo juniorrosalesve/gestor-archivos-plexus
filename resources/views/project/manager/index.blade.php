@@ -16,8 +16,8 @@
                             <td>Id</td>
                             <td>Nombre</td>
                             <td>Region</td>
-                            {{-- <td>País</td> --}}
-                            <td>Tiempo de entrega</td>
+                            <td>País</td>
+                            {{-- <td>Tiempo de entrega</td> --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -30,14 +30,14 @@
                                     'projectId' => $item->id
                                 ]) }}" class="underline">{{ $item->name }}</a></td>
                                 <td>{{ $item->region->name }} - {{ $item->region->user->name }}</td>
-                                {{-- <td>{{ $item->region->country->name }}</td> --}}
-                                <td>
+                                <td>{{ $item->country->name }}</td>
+                                {{-- <td>
                                     @if ($item->delivery == null)
                                         <span class="italic">No aplica</span>
                                     @else
                                         {{ date('d-m-Y', strtotime($item->delivery)) }}
                                     @endif
-                                </td>
+                                </td> --}}
                             </tr>
                         @endforeach
                     </tbody>

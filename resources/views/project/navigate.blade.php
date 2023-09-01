@@ -98,7 +98,7 @@
                     <label class="label">
                         <span class="label-text">Nombre <i class="text-red-500">*</i></span>
                     </label> 
-                    <input type="text" name="name" class="input input-bordered" autocomplete="off" required>
+                    <input type="text" name="name" class="input input-bordered" id="inputNameAddFile" autocomplete="off" required>
                 </div>
                 <div class="form-control">
                     <label class="label">
@@ -106,11 +106,12 @@
                     </label> 
                     <select name="file_week" class="select select-bordered w-full" id="addFileWeek" required></select>
                 </div>
+                <div class="form-control" id="addFileCronograma"></div>
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Archivo <i class="text-red-500">*</i></span>
                     </label> 
-                    <input type="file" name="file" class="file-input file-input-success" autocomplete="off" required>
+                    <input type="file" name="file" class="file-input file-input-success" id="inputFileAddFile" autocomplete="off" required>
                 </div>
                 <input type="hidden" name="projectId" value="{{ $project->id }}">
                 <input type="hidden" name="route" id="addFileRoute">
@@ -178,7 +179,7 @@
                 <form action="{{ route('update-cronograma') }}" method="POST" id="inputCronograma">
                     @csrf
                     @foreach ($cronogramas as $item)
-                        <div class="grid grid-cols-6 gap-4">
+                        <div class="grid grid-cols-6 gap-4 cron_query_{{ $item->id }}">
                             <div class="form-control">
                                 <label class="label">
                                     <span class="label-text">N° Factura <i class="text-red-500">*</i></span>
@@ -212,7 +213,7 @@
                             <div class="form-control">
                                 <label class="label">
                                     <span class="label-text">Monto <i class="text-red-500">*</i></span>
-                                    {{-- <span class="btn btn-xs btn-error float-right -mt-1" onclick="removeInputCronograma()">x</span> --}}
+                                    <span class="btn btn-xs btn-error float-right -mt-1" onclick="removeInputCronograma('cron_query_{{ $item->id }}')">x</span>
                                 </label> 
                                 <input type="number" value="{{ $item->monto }}" name="monto[]" class="input input-bordered" autocomplete="off" required>
                             </div>
@@ -221,6 +222,72 @@
                     <input type="hidden" name="projectId" value="{{ $project->id }}">
                 </form>
                 <button type="button" class="btn btn-success btn-sm mt-4" onclick="submitCronograma()">Guardar cronograma</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+    <dialog id="modal_showCronograma" class="modal">
+        <div method="dialog" class="modal-box min-w-[1200px]">
+            <h3 class="font-bold text-lg mb-3">Cronograma de pagos</h3>
+            <hr />
+            <div class="w-full h-full mt-3">
+                <table id="table">
+                    <thead>
+                        <tr>
+                            <td>N° Factura</td>
+                            <td>Fecha factura</td>
+                            <td>Fecha vencimiento</td>
+                            <td>Fecha pago real</td>
+                            <td>Moneda</td>
+                            <td>Monto</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $totalFacturado     =   0;
+                            $totalPagado        =   0;
+                            $porCobrar          =   0;
+                        @endphp
+                        @foreach ($cronogramas as $item)
+                            <tr>
+                                <td>{{ $item->n_factura }}</td>
+                                <td>{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
+                                <td>{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
+                                @if ($item->fecha_pagoreal != null)
+                                    <td>{{ date('d-m-Y', strtotime($item->fecha_pagoreal)) }}</td>
+                                @else
+                                    <td>-</td>
+                                @endif
+                                <td>{{ $item->moneda }}</td>
+                                <td>{{ number_format($item->monto, 2, ',', '.') }}</td>
+                            </tr>
+                            @php
+                                $totalFacturado     +=  $item->monto;
+                                if($item->fecha_pagoreal != null)
+                                    $totalPagado    +=  $item->monto;
+                            @endphp
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-200">
+                            <td colspan="4">Total facturado</td>
+                            <td>USD</td>
+                            <td>{{ number_format($totalFacturado, 2, ',', '.') }}</td>
+                        </tr>
+                        <tr class="bg-green-400">
+                            <td colspan="4">Pagado</td>
+                            <td>USD</td>
+                            <td>{{ number_format($totalPagado, 2, ',', '.') }}</td>
+                        </tr>
+                        <tr class="bg-yellow-200">
+                            <td colspan="4">Por cobrar</td>
+                            <td>USD</td>
+                            <td>{{ number_format(($totalFacturado-$totalPagado), 2, ',', '.') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
         <form method="dialog" class="modal-backdrop">
@@ -259,17 +326,12 @@
             </label> 
             <input type="text" name="moneda[]" class="input input-bordered" autocomplete="off" required>
         </div>
-        <div class="form-control">
-            <label class="label">
-                <span class="label-text">Monto <i class="text-red-500">*</i></span>
-                {{-- <span class="btn btn-xs btn-error float-right -mt-1" onclick="removeInputCronograma()">x</span> --}}
-            </label> 
-            <input type="number" name="monto[]" class="input input-bordered" autocomplete="off" required>
-        </div>
     </div>
     <script>
+        const cronogramas   =   @json($cronogramas);
         let sendingRequest      =   false;
         let fileActualPreview   =   'image';
+        let iCrono  =   1;
         $("#preview_UrlFile").hide();
 
         function navigate(name, route, id, weekFrom = 0, weekTo = 0) {
@@ -288,10 +350,14 @@
                         if($(detailsId+" ul").length) 
                             $(detailsId+" ul").remove();
                         let prepareAppend       =   '<ul id="dir_id_'+id+'">';
-                        if(name == 'Cronograma de pagos')
-                            prepareAppend   +=  '<li onclick="managerCronograma();" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Gestionar cronograma</li>';
-                        else
-                            prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
+                        if(name == 'Cronograma de pagos') {
+                            prepareAppend   +=  '<li><a href="javascript:void(0);" onclick="managerCronograma()">Gestionar cronograma</li>';
+                            prepareAppend   +=  '<li><a href="javascript:void(0);" onclick="showCronograma()">Mostrar cronograma</li>';
+                        }
+                        else {
+                            // prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
+                            prepareAppend   +=  '--- <span onclick="openModalAddFile(\''+name+'\', '+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg text-xs cursor-pointer">Subir archivo</span>';
+                        }
                         if(data.length > 0) {
                             for(var i = 0; i < data.length; i++) {
                                 if(data[i].type == 'directory') {
@@ -336,7 +402,7 @@
                     let isOpen   =   $("#dir_"+id+" details").removeAttr('open');
                 });
         }
-        function openModalAddFile(route, id, weekFrom, weekTo) {
+        function openModalAddFile(name, route, id, weekFrom, weekTo) {
             $("#addFileRoute").val((route+1));
             $("#addFileLink").val(id);
             let selectWeek  =   '<option value="" disabled selected>Elige una semana</option>';
@@ -349,6 +415,20 @@
                     selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>'
             }
             $("#addFileWeek").html(selectWeek);
+            if(name == 'Ficha de depósito / SWIFT')
+            {
+                cronogramaInput     =  '<label class="label"><span class="label-text">Cronograma <i class="text-red-500">*</i></span></label>';
+                cronogramaInput     +=  '<select name="cronograma" class="select select-bordered w-full" required>';
+                cronogramaInput     +=  '<option value="" selected>Selecciona una factura</option>';
+                for(var i = 0; i < cronogramas.length; i++) 
+                    cronogramaInput     +=  '<option value="'+cronogramas[i].id+'">'+cronogramas[i].n_factura+'</option>';
+                cronogramaInput     +=  '</select>';
+                $("#addFileCronograma").html(cronogramaInput);
+            }
+            else
+                $("#addFileCronograma").html("");
+            $("#inputNameAddFile").val("");
+            $("#inputFileAddFile").val("");
             document.getElementById('modal_add_file').checked = true;
         }
         function openModalAddDir(route, id) {
@@ -382,11 +462,24 @@
         function managerCronograma() {
             modal_managerCronograma.showModal();
         }
+        function showCronograma() {
+            modal_showCronograma.showModal();
+        }
         function addInputCronograma() {
             const modelInput    =   document.getElementById('clonateCronograma');
             const getForm       =   document.getElementById('inputCronograma');
             let newInput    =   getForm.appendChild(modelInput.cloneNode(true));
+            newInput.removeAttribute('id');
             newInput.classList.remove('hidden');
+            let prepareExtra    =   '<div class="form-control"><label class="label"><span class="label-text">Monto <i class="text-red-500">*</i></span>'
+            prepareExtra    +=  '<span class="btn btn-xs btn-error float-right -mt-1" onclick="removeInputCronograma(\'cron_view_'+iCrono+'\')">x</span>';
+            prepareExtra    +=  '</label><input type="number" name="monto[]" class="input input-bordered" autocomplete="off" required></div>'
+            $(newInput).append(prepareExtra);
+            $(newInput).addClass('cron_view_'+iCrono);
+            iCrono++;
+        }
+        function removeInputCronograma(iclass) {
+            $('.'+iclass).remove();
         }
         function submitCronograma() {
             $("#inputCronograma").submit();
