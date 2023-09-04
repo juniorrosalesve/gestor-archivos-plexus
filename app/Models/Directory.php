@@ -19,6 +19,7 @@ class Directory extends Model
         'type',
         'week_from',
         'week_to',
-        'file_week'
+        'file_week',
+        'created_at'
     ];
 }
