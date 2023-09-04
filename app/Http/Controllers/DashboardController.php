@@ -208,17 +208,17 @@ class DashboardController extends Controller
         for($i = 0; $i < sizeof($replaceResult); $i++) {
             foreach($replaceResult[$i]['ok'] as $key=>$item) {
                 $OkConteo   +=  $item;
-                if(!array_key_exists($key, $SubOkConteo))
-                    $SubOkConteo[$key]  =   $item;
-                else
-                    $SubOkConteo[$key]    +=  $item;
+                // if(!array_key_exists($key, $SubOkConteo))
+                //     $SubOkConteo[$key]  =   $item;
+                // else
+                $SubOkConteo[$key]    +=  $item;
             }
             foreach($replaceResult[$i]['bad'] as $key=>$item) { 
                 $BadConteo   +=  $item;
-                if(!array_key_exists($key, $SubBadConteo))
-                    $SubBadConteo[$key]     =   $item;
-                else     
-                    $SubBadConteo[$key]   +=  $item;
+                // if(!array_key_exists($key, $SubBadConteo))
+                //     $SubBadConteo[$key]     =   $item;
+                // else     
+                $SubBadConteo[$key]   +=  $item;
             }
         }
         dd($SubOkConteo);
