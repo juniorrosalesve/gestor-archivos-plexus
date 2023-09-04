@@ -160,7 +160,7 @@ class DashboardController extends Controller
         /* Ordenamos un poco los datos para Chart.js */
         $replaceResult     =   [];
         $total  =   0;
-        dd($result);
+        // dd($result);
         for($i = 0; $i < sizeof($result); $i++)
         {
             $keys       =   $result['keys'];
@@ -173,7 +173,10 @@ class DashboardController extends Controller
                 if(array_key_exists("ok", $result[$i])) {
                     foreach($result[$i]['ok'] as $key=>$item) {
                         if($item['key'] == $keys[$x]) {
-                            $valor  =   $item['value'];
+                            if(array_key_exists('to', $item))
+                                $valor  =   ($item['value']/$item['to'])*100;
+                            else
+                                $valor  =   $item['value'];
                             break;
                         }
                     }
@@ -185,7 +188,10 @@ class DashboardController extends Controller
                 if(array_key_exists("bad", $result[$i])) {
                     foreach($result[$i]['bad'] as $key=>$item) {
                         if($item['key'] == $keys[$x]) {
-                            $valor  =   $item['value'];
+                            if(array_key_exists('to', $item))
+                                $valor  =   ($item['value']/$item['to'])*100;
+                            else
+                                $valor  =   $item['value'];
                             break;
                         }
                     }
