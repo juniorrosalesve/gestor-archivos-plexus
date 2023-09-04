@@ -174,8 +174,8 @@ class DashboardController extends Controller
                 if(array_key_exists("ok", $result[$i])) {
                     foreach($result[$i]['ok'] as $key=>$item) {
                         if($item['key'] == $keys[$x]) {
-                            if(array_key_exists('to', $item))
-                                $valor  =   ($item['value']/$item['to'])*100;
+                            if($item['value'] > 1)
+                                $valor  =   1;
                             else
                                 $valor  =   $item['value'];
                             break;
@@ -189,8 +189,8 @@ class DashboardController extends Controller
                 if(array_key_exists("bad", $result[$i])) {
                     foreach($result[$i]['bad'] as $key=>$item) {
                         if($item['key'] == $keys[$x]) {
-                            if(array_key_exists('to', $item))
-                                $valor  =   ($item['value']/$item['to'])*100;
+                            if($item['value'] > 1)
+                                $valor  =   1;
                             else
                                 $valor  =   $item['value'];
                             break;
@@ -208,17 +208,17 @@ class DashboardController extends Controller
         for($i = 0; $i < sizeof($replaceResult); $i++) {
             foreach($replaceResult[$i]['ok'] as $key=>$item) {
                 $OkConteo   +=  $item;
-                // if(!array_key_exists($key, $SubOkConteo))
-                //     $SubOkConteo[$key]  =   $item;
-                // else
-                $SubOkConteo[$key]    +=  $item;
+                if(!array_key_exists($key, $SubOkConteo))
+                    $SubOkConteo[$key]  =   $item;
+                else
+                    $SubOkConteo[$key]    +=  $item;
             }
             foreach($replaceResult[$i]['bad'] as $key=>$item) { 
                 $BadConteo   +=  $item;
-                // if(!array_key_exists($key, $SubBadConteo))
-                //     $SubBadConteo[$key]     =   $item;
-                // else     
-                $SubBadConteo[$key]   +=  $item;
+                if(!array_key_exists($key, $SubBadConteo))
+                    $SubBadConteo[$key]     =   $item;
+                else     
+                    $SubBadConteo[$key]   +=  $item;
             }
         }
         dd($SubOkConteo);
