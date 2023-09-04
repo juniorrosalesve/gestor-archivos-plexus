@@ -106,6 +106,14 @@
                     </label> 
                     <select name="file_week" class="select select-bordered w-full" id="addFileWeek" required></select>
                 </div>
+                @if (Auth::user()->access == 'a')
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Fecha <i class="text-red-500">*</i></span>
+                        </label> 
+                        <input type="date" name="created_at" class="input input-bordered" autocomplete="off" required>
+                    </div>
+                @endif
                 <div class="form-control" id="addFileCronograma"></div>
                 <div class="form-control">
                     <label class="label">

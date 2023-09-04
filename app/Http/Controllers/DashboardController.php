@@ -132,11 +132,11 @@ class DashboardController extends Controller
                                         $diff   =   $endDate->diff($startDate);
                                         $nWeek  =   floor($diff->days / 7)+1;
                                     
-                                        if($weeks > $nWeek)
+                                        if($nWeek > $z)
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         else 
                                             $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
-                                        // break;
+                                        break;
                                     }
                                 }
                             }
@@ -161,7 +161,7 @@ class DashboardController extends Controller
         /* Ordenamos un poco los datos para Chart.js */
         $replaceResult     =   [];
         $total  =   0;
-        dd($result);
+        // dd($result);
         for($i = 0; $i < sizeof($result); $i++)
         {
             $keys       =   $result['keys'];
@@ -221,6 +221,7 @@ class DashboardController extends Controller
                     $SubBadConteo[$key]   +=  $item;
             }
         }
+        // dd($SubOkConteo);
         $totalKeys      =   sizeof($result['keys']);
         $totalDirs      =   (sizeof($projects)*$totalKeys);
         $porcentaje     =   [];
