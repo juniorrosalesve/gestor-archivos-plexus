@@ -139,7 +139,7 @@ class DashboardController extends Controller
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'value' => ($result[$i]["ok"][$x]+1)];
                                         else
                                             $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'value' => ($result[$i]["ok"][$x]+1)];
-                                        break;
+                                        // break;
                                     }
                                 }
                             }
