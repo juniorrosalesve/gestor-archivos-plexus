@@ -132,7 +132,7 @@ class DashboardController extends Controller
                                         $diff   =   $endDate->diff($startDate);
                                         $nWeek  =   floor($diff->days / 7)+1;
                                     
-                                        if($weeks > $z)
+                                        if($weeks > $nWeek)
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         else 
                                             $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
@@ -161,7 +161,7 @@ class DashboardController extends Controller
         /* Ordenamos un poco los datos para Chart.js */
         $replaceResult     =   [];
         $total  =   0;
-        // dd($result);
+        dd($result);
         for($i = 0; $i < sizeof($result); $i++)
         {
             $keys       =   $result['keys'];
