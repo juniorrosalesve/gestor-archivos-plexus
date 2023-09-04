@@ -133,10 +133,9 @@ class DashboardController extends Controller
                                         $nWeek  =   floor($diff->days / 7)+1;
                                     
                                         if($nWeek > $z)
-                                            $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'value' => ($result[$i]["ok"][$x]+1)];
+                                            $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         else 
-                                            $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'value' => $z];
-                                        // break;
+                                            $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                     }
                                 }
                             }
@@ -161,7 +160,7 @@ class DashboardController extends Controller
         /* Ordenamos un poco los datos para Chart.js */
         $replaceResult     =   [];
         $total  =   0;
-        // dd($result);
+        dd($result);
         for($i = 0; $i < sizeof($result); $i++)
         {
             $keys       =   $result['keys'];
@@ -221,8 +220,9 @@ class DashboardController extends Controller
         $porcentaje["total_ok"]     =   $OkConteo/$totalDirs*100;
         $porcentaje["total_bad"]    =   $BadConteo/$totalDirs*100;
         dd($SubOkConteo);
-        foreach($SubOkConteo as $key=>$item) 
+        foreach($SubOkConteo as $key=>$item) {
             $porcentaje['total_sub_ok'][]    =   ($item/sizeof($projects))*100;
+        }
         foreach($SubBadConteo as $key=>$item) 
             $porcentaje['total_sub_bad'][]    =   ($item/sizeof($projects))*100;
         $porcentaje['keys']         =   $result['keys'];
