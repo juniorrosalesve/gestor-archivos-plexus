@@ -136,7 +136,7 @@ class DashboardController extends Controller
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         else 
                                             $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
-                                        break;
+                                        // break;
                                     }
                                 }
                             }
