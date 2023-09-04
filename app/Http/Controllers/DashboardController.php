@@ -131,10 +131,7 @@ class DashboardController extends Controller
         
                                         $diff   =   $endDate->diff($startDate);
                                         $nWeek  =   floor($diff->days / 7)+1;
-                                        
-                                        if(!array_key_exists($x, $result[$i]["ok"]))
-                                            $result[$i]["ok"][$x]   =   0;
-
+                                    
                                         if($nWeek > $z)
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'value' => ($result[$i]["ok"][$x]+1)];
                                         else {
