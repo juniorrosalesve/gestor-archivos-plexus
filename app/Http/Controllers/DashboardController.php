@@ -132,7 +132,7 @@ class DashboardController extends Controller
                                         $diff   =   $endDate->diff($startDate);
                                         $nWeek  =   floor($diff->days / 7)+1;
                                     
-                                        if($nWeek > $z)
+                                        if($weeks > $z)
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         else 
                                             $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
