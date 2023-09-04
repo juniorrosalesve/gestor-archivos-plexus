@@ -134,6 +134,7 @@ class DashboardController extends Controller
                                         
                                         // if(!array_key_exists($x, $result[$i]["ok"]))
                                         //     $result[$i]["ok"][$x]   =   0;
+                                        dd($result[$i]);
 
                                         if($nWeek > $z)
                                             $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'value' => ($result[$i]["ok"][$x]+1)];
