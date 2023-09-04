@@ -221,7 +221,6 @@ class DashboardController extends Controller
                     $SubBadConteo[$key]   +=  $item;
             }
         }
-        dd($SubOkConteo);
         $totalKeys      =   sizeof($result['keys']);
         $totalDirs      =   (sizeof($projects)*$totalKeys);
         $porcentaje     =   [];
