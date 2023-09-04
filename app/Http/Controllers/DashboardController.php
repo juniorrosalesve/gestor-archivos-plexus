@@ -225,7 +225,7 @@ class DashboardController extends Controller
         $porcentaje     =   [];
         $porcentaje["total_ok"]     =   $OkConteo/$totalDirs*100;
         $porcentaje["total_bad"]    =   $BadConteo/$totalDirs*100;
-        dd($SubOkConteo);
+        dd($SubBadConteo);
         foreach($SubOkConteo as $key=>$item) {
             $porcentaje['total_sub_ok'][]    =   ($item/sizeof($projects))*100;
         }
