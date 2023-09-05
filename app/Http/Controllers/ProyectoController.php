@@ -99,7 +99,7 @@ class ProyectoController extends Controller
             if(sizeof($weeks) > 1)
                 Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => $weeks[1]]);
             else
-                Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0]]);
+                Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => 0]);
         }
         Project::where('id', $r->projectId)->update($update);
         return "<script>alert('Guardado correctamente!');location.href='".route('edit-project', [
@@ -153,6 +153,22 @@ class ProyectoController extends Controller
     /* Axios callback */
     public function navigate(Request $r) {
         $dirs   =   Directory::where('projectId', $r->projectId)->where('route', ($r->route+1))->where('link', $r->link)->get();
+        for($i = 0; $i < sizeof($dirs); $i++) {
+            $dirs[$i]->created_atFormat   =   date('d-m-Y', strtotime($dirs[$i]->created_at));
+
+            $startDate = new \DateTime($dirs[$i]->project->inicia);
+            $endDate = new \DateTime($dirs[$i]->created_atFormat);
+
+            $diff = $endDate->diff($startDate);
+            $numberOfWeeks  =   floor($diff->days / 7);
+            $weekActual     =   $numberOfWeeks+1;
+            if($weekActual > $dirs[$i]->file_week)
+                $dirs[$i]->alert    =   true;
+            else
+                $dirs[$i]->alert    =   false;
+            if($dirs[$i]->type == 'directory')
+                $dirs[$i]->count    =   Directory::where('link', $dirs[$i]->id)->count();
+        }
         return $dirs->toJson();
     }
     public function navigateAddDir(Request $r) {

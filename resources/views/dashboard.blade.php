@@ -49,19 +49,38 @@
                         @if ($chartProject)
                             <option value="0">Todos los proyectos</option>
                             <option value="{{ $chartProjectData->id }}" selected>{{ $chartProjectData->name }}</option>
-                        @endif
-                        @if ($region != null && $country != null)
-                            @if (!$chartProject)
-                                <option value="0" selected>Todos los proyectos</option>
-                            @endif
-                            @foreach ($country->projects as $item)
-                                @if ($chartProject)
-                                    @if ($chartProjectData->id == $item->id)
-                                        @continue
-                                    @endif
+                        @else 
+                            @if ($region != null && $country != null)
+                                @if (!$chartProject)
+                                    <option value="0" selected>Todos los proyectos</option>
                                 @endif
+                                @foreach ($country->projects as $item)
+                                    @if ($chartProject)
+                                        @if ($chartProjectData->id == $item->id)
+                                            @continue
+                                        @endif
+                                    @endif
 
-                                <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                @endforeach
+                            @else
+                               <option value="0">Todos los proyectos</option> 
+                            @endif
+                        @endif
+                    </select>
+                    <select class="select select-bordered mr-3" id="eligeYear">
+                        @if ($filterByDate != null)
+                            <option value="">Filtrar por año</option>
+                            <option value="{{ $filterByDate }}" selected>{{ $filterByDate }}</option>
+                            @foreach ($years as $item)
+                                @if ($filterByDate != $item)
+                                    <option value="{{ $item }}">{{ $item }}</option>
+                                @endif
+                            @endforeach
+                        @else
+                            <option value="" selected>Filtrar por año</option>
+                            @foreach ($years as $item)
+                                <option value="{{ $item }}">{{ $item }}</option>
                             @endforeach
                         @endif
                     </select>
@@ -99,7 +118,7 @@
                                 <dd class="text-gray-500 text-center">Total paises</dd>
                             </div>
                         @endif
-                        <div class="flex flex-col items-center justify-center bg-base-200 p-3 rounded cursor-pointer">
+                        <div class="flex flex-col items-center justify-center bg-base-200 p-3 rounded cursor-pointer" onclick="location.href='{{ route('allprojects') }}'">
                             <dt class="mb-2 text-3xl font-extrabold">{{ sizeof($projects) }}</dt>
                             <dd class="text-gray-500 text-center">Total proyectos</dd>
                         </div>
@@ -111,16 +130,36 @@
                             <canvas id="cumplimiento_por_root"></canvas>
                         </div>
                         <div class="w-[600px] mx-auto my-auto" id="div_cumplimiento_por_root_1">
-                            <canvas id="cumplimiento_por_root_1"></canvas>
+                            <div class="flex justify-around">
+                                <h1 class="italic font-semibold">In time: {{ $financiera_chart["total_countOk"] }}</h1>
+                                <h1 class="italic font-semibold">Out Time: {{ $financiera_chart["total_countOutTime"] }}</h1>
+                                <h1 class="italic font-semibold">Undelivered: {{ $financiera_chart["total_countBad"] }}</h1>
+                            </div>
+                            <canvas id="cumplimiento_por_root_1" class="border-2 rounded"></canvas>
                         </div>
                         <div class="w-[600px] mx-auto my-auto hidden" id="div_cumplimiento_por_root_2">
-                            <canvas id="cumplimiento_por_root_2"></canvas>
+                            <div class="flex justify-around">
+                                <h1 class="italic font-semibold">In time: {{ $operativa_chart["total_countOk"] }}</h1>
+                                <h1 class="italic font-semibold">Out Time: {{ $operativa_chart["total_countOutTime"] }}</h1>
+                                <h1 class="italic font-semibold">Undelivered: {{ $operativa_chart["total_countBad"] }}</h1>
+                            </div>
+                            <canvas id="cumplimiento_por_root_2" class="border-2 rounded"></canvas>
                         </div>
                         <div class="w-[600px] mx-auto my-auto hidden" id="div_cumplimiento_por_root_3">
-                            <canvas id="cumplimiento_por_root_3"></canvas>
+                            <div class="flex justify-around">
+                                <h1 class="italic font-semibold">In time: {{ $estrategica_tactica_chart["total_countOk"] }}</h1>
+                                <h1 class="italic font-semibold">Out Time: {{ $estrategica_tactica_chart["total_countOutTime"] }}</h1>
+                                <h1 class="italic font-semibold">Undelivered: {{ $estrategica_tactica_chart["total_countBad"] }}</h1>
+                            </div>
+                            <canvas id="cumplimiento_por_root_3" class="border-2 rounded"></canvas>
                         </div>
                         <div class="w-[600px] mx-auto my-auto hidden" id="div_cumplimiento_por_root_4">
-                            <canvas id="cumplimiento_por_root_4"></canvas>
+                            <div class="flex justify-around">
+                                <h1 class="italic font-semibold">In time: {{ $gestion_humana_chart["total_countOk"] }}</h1>
+                                <h1 class="italic font-semibold">Out Time: {{ $gestion_humana_chart["total_countOutTime"] }}</h1>
+                                <h1 class="italic font-semibold">Undelivered: {{ $gestion_humana_chart["total_countBad"] }}</h1>
+                            </div>
+                            <canvas id="cumplimiento_por_root_4" class="border-2 rounded"></canvas>
                         </div>
                     </div>
                     <div class="w-full mx-auto" id="div_cumplimiento_por_subdirs_1">
@@ -138,37 +177,102 @@
                 </div>
                 <hr style="margin-top:2rem;margin-bottom:2rem;" />
                 <div>
-                    <h1 class="mb-3 text-2xl">Proyectos abiertos con facturas atrasadas</h1>
-                    <table id="table">
-                        <thead>
-                            <tr>
-                                @if (!$chartProject)
-                                    <td>Nombre</td>
-                                @endif
-                                <td>N° Factura</td>
-                                <td>Fecha factura</td>
-                                <td>Fecha vencimiento</td>
-                                <td>Fecha pago real</td>
-                                <td>Moneda</td>
-                                <td>Monto</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($facturas_vencidas as $item)
+                    @if (!$chartProject)
+                        <div class="my-10 bg-base-200 p-2 rounded">
+                            <h1 class="mb-3 text-lg">Proyectos en mora</h1>
+                            <table id="table2">
+                                <thead>
+                                    <tr>
+                                        <td>Nombre</td>
+                                        <td>N° Factura</td>
+                                        <td>Fecha factura</td>
+                                        <td>Fecha vencimiento</td>
+                                        <td>Moneda</td>
+                                        <td>Monto</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($facturas_mora as $item)
+                                        <tr>
+                                            <td><a href="{{ route('project', [
+                                                'regionId' => $item->project->regionId,
+                                                'countryId' => $item->project->countryId,
+                                                'projectId' => $item->project->id
+                                            ]) }}" class="underline">{{ $item->project->name }}</a></td>
+                                            <td>{{ $item->n_factura }}</td>
+                                            <td class="bg-yellow-200">{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
+                                            <td class="bg-red-200">{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
+                                            <td>{{ $item->moneda }}</td>
+                                            <td>{{ number_format($item->monto, 2, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else 
+                        <div class="my-10 bg-base-200 p-2 rounded">
+                            <h1 class="mb-3 text-lg">Facturas en mora</h1>
+                            <table id="table2">
+                                <thead>
+                                    <tr>
+                                        <td>N° Factura</td>
+                                        <td>Fecha factura</td>
+                                        <td>Fecha vencimiento</td>
+                                        <td>Moneda</td>
+                                        <td>Monto</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($facturas_mora as $item)
+                                        <tr>
+                                            <td>{{ $item->n_factura }}</td>
+                                            <td class="bg-yellow-200">{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
+                                            <td class="bg-red-200">{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
+                                            <td>{{ $item->moneda }}</td>
+                                            <td>{{ number_format($item->monto, 2, ',', '.') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                    <div class="my-3 bg-base-200 p-2 rounded">
+                        <h1 class="mb-3 text-lg">Historial de facturas atrasadas</h1>
+                        <table id="table">
+                            <thead>
                                 <tr>
                                     @if (!$chartProject)
-                                        <td>{{ $item->project->name }}</td>
+                                        <td>Nombre</td>
                                     @endif
-                                    <td>{{ $item->n_factura }}</td>
-                                    <td>{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
-                                    <td class="bg-yellow-200">{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
-                                    <td class="bg-red-200">{{ date('d-m-Y', strtotime($item->fecha_pagoreal)) }}</td>
-                                    <td>{{ $item->moneda }}</td>
-                                    <td>{{ $item->monto }}</td>
+                                    <td>N° Factura</td>
+                                    <td>Fecha factura</td>
+                                    <td>Fecha vencimiento</td>
+                                    <td>Fecha pago real</td>
+                                    <td>Moneda</td>
+                                    <td>Monto</td>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($facturas_vencidas as $item)
+                                    <tr>
+                                        @if (!$chartProject)
+                                            <td><a href="{{ route('project', [
+                                                'regionId' => $item->project->regionId,
+                                                'countryId' => $item->project->countryId,
+                                                'projectId' => $item->project->id
+                                            ]) }}" class="underline">{{ $item->project->name }}</a></td>
+                                        @endif
+                                        <td>{{ $item->n_factura }}</td>
+                                        <td>{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
+                                        <td class="bg-yellow-200">{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
+                                        <td class="bg-red-200">{{ date('d-m-Y', strtotime($item->fecha_pagoreal)) }}</td>
+                                        <td>{{ $item->moneda }}</td>
+                                        <td>{{ number_format($item->monto, 2, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div> 
             </div>
         </div>
@@ -189,12 +293,12 @@
         new Chart("cumplimiento_por_root_1", {
             type: 'bar',
             data: {
-                labels: ["In time", "Out time"],
+                labels: ["In time", "Out time", "Undelivered"],
                 datasets: [
                     {
                         label: 'Admin. / Financiera',
-                        data: [{{ $financiera_chart['total_ok'] }}, {{ $financiera_chart['total_bad'] }}],
-                        backgroundColor:[barColors[0], "rgb(252 165 165)"],
+                        data: [{{ $financiera_chart['total_ok'] }}, {{ $financiera_chart["total_outTime"] }}, {{ $financiera_chart['total_bad'] }}],
+                        backgroundColor:[barColors[0], "rgb(253 224 71)", "rgb(252 165 165)",],
                         borderWidth: 1
                     },
                 ],
@@ -227,6 +331,12 @@
                     },
                     {
                         label: 'Out Time',
+                        data: @json($financiera_chart['total_sub_outTime']),
+                        backgroundColor:"rgb(253 224 71)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Undelivered',
                         data: @json($financiera_chart['total_sub_bad']),
                         backgroundColor:"rgb(252 165 165)",
                         borderWidth: 1
@@ -239,7 +349,7 @@
                 // In this case, we are setting the border of each horizontal bar to be 2px wide
                 elements: {
                     bar: {
-                        borderWidth: 2,
+                        borderWidth: 3,
                     }
                 },
                 responsive: true,
@@ -270,12 +380,12 @@
         new Chart("cumplimiento_por_root_2", {
             type: 'bar',
             data: {
-                labels: ["In time", "Out time"],
+                labels: ["In time", "Out time", "Undelivered"],
                 datasets: [
                     {
                         label: 'Operativa',
-                        data: [{{ $operativa_chart['total_ok'] }}, {{ $operativa_chart['total_bad'] }}],
-                        backgroundColor:[barColors[1], "rgb(252 165 165)"],
+                        data: [{{ $operativa_chart['total_ok'] }}, {{ $operativa_chart["total_outTime"] }}, {{ $operativa_chart['total_bad'] }}],
+                        backgroundColor:[barColors[0], "rgb(253 224 71)", "rgb(252 165 165)",],
                         borderWidth: 1
                     },
                 ],
@@ -308,6 +418,12 @@
                     },
                     {
                         label: 'Out Time',
+                        data: @json($operativa_chart['total_sub_outTime']),
+                        backgroundColor:"rgb(253 224 71)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Undelivered',
                         data: @json($operativa_chart['total_sub_bad']),
                         backgroundColor:"rgb(252 165 165)",
                         borderWidth: 1
@@ -320,7 +436,7 @@
                 // In this case, we are setting the border of each horizontal bar to be 2px wide
                 elements: {
                     bar: {
-                        borderWidth: 1,
+                        borderWidth: 3,
                     }
                 },
                 responsive: true,
@@ -340,12 +456,12 @@
         new Chart("cumplimiento_por_root_3", {
             type: 'bar',
             data: {
-                labels: ["In time", "Out time"],
+                labels: ["In time", "Out time", "Undelivered"],
                 datasets: [
                     {
                         label: 'Estratégica / Táctica',
-                        data: [{{ $estrategica_tactica_chart['total_ok'] }}, {{ $estrategica_tactica_chart['total_bad'] }}],
-                        backgroundColor:[barColors[2], "rgb(252 165 165)"],
+                        data: [{{ $estrategica_tactica_chart['total_ok'] }}, {{ $estrategica_tactica_chart["total_outTime"] }}, {{ $estrategica_tactica_chart['total_bad'] }}],
+                        backgroundColor:[barColors[0], "rgb(253 224 71)", "rgb(252 165 165)",],
                         borderWidth: 1
                     },
                 ],
@@ -378,6 +494,12 @@
                     },
                     {
                         label: 'Out Time',
+                        data: @json($estrategica_tactica_chart['total_sub_outTime']),
+                        backgroundColor:"rgb(253 224 71)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Undelivered',
                         data: @json($estrategica_tactica_chart['total_sub_bad']),
                         backgroundColor:"rgb(252 165 165)",
                         borderWidth: 1
@@ -390,7 +512,7 @@
                 // In this case, we are setting the border of each horizontal bar to be 2px wide
                 elements: {
                     bar: {
-                        borderWidth: 1,
+                        borderWidth: 3,
                     }
                 },
                 responsive: true,
@@ -409,12 +531,12 @@
         new Chart("cumplimiento_por_root_4", {
             type: 'bar',
             data: {
-                labels: ["In time", "Out time"],
+                labels: ["In time", "Out time", "Undelivered"],
                 datasets: [
                     {
                         label: 'Gestión Humana',
-                        data: [{{ $gestion_humana_chart['total_ok'] }}, {{ $gestion_humana_chart['total_bad'] }}],
-                        backgroundColor:[barColors[3], "rgb(252 165 165)"],
+                        data: [{{ $gestion_humana_chart['total_ok'] }}, {{ $gestion_humana_chart["total_outTime"] }}, {{ $gestion_humana_chart['total_bad'] }}],
+                        backgroundColor:[barColors[0], "rgb(253 224 71)", "rgb(252 165 165)",],
                         borderWidth: 1
                     },
                 ],
@@ -447,6 +569,12 @@
                     },
                     {
                         label: 'Out Time',
+                        data: @json($gestion_humana_chart['total_sub_outTime']),
+                        backgroundColor:"rgb(253 224 71)",
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Undelivered',
                         data: @json($gestion_humana_chart['total_sub_bad']),
                         backgroundColor:"rgb(252 165 165)",
                         borderWidth: 1
@@ -459,7 +587,7 @@
                 // In this case, we are setting the border of each horizontal bar to be 2px wide
                 elements: {
                     bar: {
-                        borderWidth: 1,
+                        borderWidth: 3,
                     }
                 },
                 responsive: true,
@@ -533,15 +661,16 @@
         const projects  =   @json($projects);
 
         function onClickSearch() {
-            const region    =   $("#eligeRegion").val();
-            const country   =   $("#eligePais").val();
-            const xproject  =   $("#eligeProyecto").val();
+            const region        =   $("#eligeRegion").val();
+            const country       =   $("#eligePais").val();
+            const xproject      =   $("#eligeProyecto").val();
+            const filterDate    =   $("#eligeYear").val();
             
             let regionValue     =   (region == null ? 0 : region);
             let countryValue    =   (country == null ? 0 : country);
             let projectValue    =   (xproject == null ? 0 : xproject);
 
-            location.href='{{ url("/dashboard/") }}?region='+regionValue+'&country='+countryValue+'&projectId='+projectValue;
+            location.href='{{ url("/dashboard/") }}?region='+regionValue+'&country='+countryValue+'&projectId='+projectValue+'&filterDate='+filterDate;
         }
 
         function selectRegion(e) {

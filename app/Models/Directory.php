@@ -20,6 +20,13 @@ class Directory extends Model
         'week_from',
         'week_to',
         'file_week',
+        'created_by',
+        'edit_by',
+        'deleted',
         'created_at'
     ];
+
+    public function project() {
+        return $this->belongsTo('App\Models\Project', 'projectId');
+    }
 }

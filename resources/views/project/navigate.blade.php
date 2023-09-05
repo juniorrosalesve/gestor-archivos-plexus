@@ -26,7 +26,14 @@
                     </ul>
                 </div>
                 <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer" onclick="location.href='{{ url('dashboard') }}?projectId={{ $project->id }}'"><title>Estadísticas de este proyecto</title><path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z" /></svg>
+                    <a href="{{ url('dashboard') }}?projectId={{ $project->id }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer inline-block mr-5"><title>Estadísticas de este proyecto</title><path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z" /></svg>
+                    </a>
+                    <a href="{{ route('edit-project', [
+                            'projectId' => $project->id
+                        ]) }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer inline-block"><title>Editar Proyecto</title><path d="M4 18H12.13L11 19.13V20H4C2.9 20 2 19.11 2 18V6C2 4.89 2.89 4 4 4H10L12 6H20C21.1 6 22 6.89 22 8V10.15C21.74 10.06 21.46 10 21.17 10C20.75 10 20.36 10.11 20 10.3V8H4V18M22.85 13.47L21.53 12.15C21.33 11.95 21 11.95 20.81 12.15L19.83 13.13L21.87 15.17L22.85 14.19C23.05 14 23.05 13.67 22.85 13.47M13 19.96V22H15.04L21.17 15.88L19.13 13.83L13 19.96Z" /></svg>
+                    </a>
                 </div>
             </div>
             <hr />
@@ -41,7 +48,17 @@
                 </div>
                 <div class="flex flex-col items-center justify-center">
                     <dt class="mb-2 text-3xl font-extrabold">
-                        {{ date("d-m-y", strtotime($project->inicia."+ ".$project->semanas." week")) }}
+                        @php
+                            if(date('D', strtotime($project->inicia)) == 'Mon')
+                                $realDate   =   date("d-m-y", strtotime($project->inicia."+ ".$project->semanas." week"." - 3 days"));
+                            else
+                                $realDate   =   date("d-m-y", strtotime($project->inicia."+ ".$project->semanas." week"));
+                            $canAddFile     =   true;
+                            $now    =   date('d-m-y');
+                            if($now > $realDate && \Auth::user()->access != 'a')
+                                $canAddFile =   false;
+                        @endphp
+                        {{ $realDate }}
                     </dt>
                     <dd class="text-gray-500">Fecha final</dd>
                 </div>
@@ -85,6 +102,14 @@
                         </ul>
                     </div>
                 </div>
+                <div class="mt-5">
+                    <h1 class="italic">Notas del proyecto</h1>
+                    @if (!empty($project->notes))
+                        <p class="bg-base-200 italic text-sm p-2 rounded">{{ $project->notes }}</p>
+                    @else
+                        <p class="bg-base-200 italic text-sm p-2 rounded text-center w-full">No hay notas pendientes.</p>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -124,7 +149,9 @@
                 <input type="hidden" name="projectId" value="{{ $project->id }}">
                 <input type="hidden" name="route" id="addFileRoute">
                 <input type="hidden" name="link" id="addFileLink">
-                <button type="submit" class="btn btn-primary btn-sm mt-10 mb-2 float-right w-[50%]">Añadir</button>
+                <button type="submit" class="btn btn-primary btn-sm mt-10 mb-2 float-right w-[50%]" id="btnAddFile">
+                    <span class="loading loading-spinner hidden"></span> Añadir
+                </button>
             </form>
         </div>
         <label class="modal-backdrop" for="modal_add_file">Close</label>
@@ -156,7 +183,7 @@
         <label class="modal-backdrop" for="modal_add_dir">Close</label>
     </div>
     <dialog id="modal_previewFile" class="modal">
-        <div method="dialog" class="modal-box w-11/12 max-w-5xl">
+        <div method="dialog" class="modal-box w-11/12 max-w-5xl min-h-full">
             <h3 class="font-bold text-lg mb-3" id="preview_NameFile">Name file</h3>
             <div class="float-right -mt-10">
                 <a download="#" href="#" title="Descargar" id="preview_DownloadFile">
@@ -240,7 +267,7 @@
         <div method="dialog" class="modal-box min-w-[1200px]">
             <h3 class="font-bold text-lg mb-3">Cronograma de pagos</h3>
             <hr />
-            <div class="w-full h-full mt-3">
+            <div class="w-full mt-3">
                 <table id="table">
                     <thead>
                         <tr>
@@ -257,9 +284,10 @@
                             $totalFacturado     =   0;
                             $totalPagado        =   0;
                             $porCobrar          =   0;
+                            $now        =   date('Y-m-d');
                         @endphp
                         @foreach ($cronogramas as $item)
-                            <tr>
+                            <tr @if($now > $item->fecha_vencimiento) style="background:rgb(252 165 165);" @endif>
                                 <td>{{ $item->n_factura }}</td>
                                 <td>{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
                                 <td>{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
@@ -281,17 +309,17 @@
                     <tfoot>
                         <tr class="bg-gray-200">
                             <td colspan="4">Total facturado</td>
-                            <td>USD</td>
+                            <td>{{ $cronogramas[0]->moneda }}</td>
                             <td>{{ number_format($totalFacturado, 2, ',', '.') }}</td>
                         </tr>
                         <tr class="bg-green-400">
                             <td colspan="4">Pagado</td>
-                            <td>USD</td>
+                            <td>{{ $cronogramas[0]->moneda }}</td>
                             <td>{{ number_format($totalPagado, 2, ',', '.') }}</td>
                         </tr>
                         <tr class="bg-yellow-200">
                             <td colspan="4">Por cobrar</td>
-                            <td>USD</td>
+                            <td>{{ $cronogramas[0]->moneda }}</td>
                             <td>{{ number_format(($totalFacturado-$totalPagado), 2, ',', '.') }}</td>
                         </tr>
                     </tfoot>
@@ -364,7 +392,9 @@
                         }
                         else {
                             // prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
-                            prepareAppend   +=  '--- <span onclick="openModalAddFile(\''+name+'\', '+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg text-xs cursor-pointer">Subir archivo</span>';
+                            @if($canAddFile)
+                                prepareAppend   +=  '--- <span onclick="openModalAddFile(\''+name+'\', '+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg text-xs cursor-pointer">Subir archivo</span>';
+                            @endif
                         }
                         if(data.length > 0) {
                             for(var i = 0; i < data.length; i++) {
@@ -378,6 +408,7 @@
                                         prepareAppend   +=      data[i].name+' [ '+data[i].week_from+' ]';
                                     else
                                         prepareAppend   +=      data[i].name+' [ '+data[i].week_from+'-'+data[i].week_to+' ]';
+                                    prepareAppend   +=  '<span>'+data[i].count+'</span>';
                                     prepareAppend   +=      '</summary></details></li>';
                                 }
                             }
@@ -389,6 +420,10 @@
                                     else
                                         prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>';
                                     prepareAppend   +=  data[i].name+'.'+data[i].file_ext;
+                                    if(data[i].alert)
+                                        prepareAppend   +=  '<span class="float-right text-xs italic text-yellow-600">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+']</span>'
+                                    else
+                                        prepareAppend   +=  '<span class="float-right text-xs italic">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+']</span>'
                                     prepareAppend   +=  '</a></li>'
                                 }
                             }
@@ -523,12 +558,16 @@
 
         $("#formAddFile").submit(function(e) {
             e.preventDefault();
-            const data      =   new FormData(this);
+            const data          =   new FormData(this);
+            const button        =   $("#btnAddFile");
+            const buttonSpan    =   $("#btnAddFile span");
             const config    =   {
                 headers: {
                     'content-type': 'multipart/form-data'
                 }
             }
+            button.prop('disabled', true);
+            buttonSpan.removeClass("hidden");
             axios.post('{{ route("navigate-add-file") }}', data, config)
                 .then(function(res) {
                     if(res.status == 200)
@@ -545,9 +584,16 @@
                         $("#dir_id_"+data.link).append(prepareAppend);
                         document.getElementById('modal_add_file').checked = false;
                     }
+                    else
+                        alert('No se logro añadir el archivo, intente de nuevo.');
+                    buttonSpan.addClass("hidden");
+                    button.prop('disabled', false);
                 })
                 .catch(function(err) {
                     console.log(err);
+                    alert('No se logro añadir el archivo, intente de nuevo.');
+                    buttonSpan.addClass("hidden");
+                    button.prop('disabled', false);
                 });
         });
     </script>

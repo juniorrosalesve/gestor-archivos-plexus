@@ -18,9 +18,12 @@ class DashboardController extends Controller
             return redirect()->route('manager-list');
         $region         =   null;
         $country        =   null;
-        $chartProject   =   0;
+        $filterByDate   =   null;
+        $filterById     =   0;
         if($r->has('projectId'))
-            $chartProject   =   $r->projectId;
+            $filterById     =   $r->projectId;
+        if($r->has('filterDate'))
+            $filterByDate   =   $r->filterDate;
         if($r->has('region') && $r->has('country')) {
             if($r->region > 0)
                 $region     =   Region::find($r->region);
@@ -32,20 +35,40 @@ class DashboardController extends Controller
         else
             $countries  =   Country::all();
 
-        if($region == null && $country == null)
-            $projects   =   Project::all();
-        if($region != null && $country == null)
-            $projects   =   Project::where('regionId', $region->id)->get();
-        if($region != null && $country != null)
-            $projects   =   Project::where('regionId', $region->id)->where('countryId', $country->id)->get();
+        if($filterById == 0) {
+            if($region == null && $country == null) {
+                if($filterByDate != null)
+                    $projects   =   Project::whereYear('created_at', $filterByDate)->get();
+                else
+                    $projects   =   Project::all();
+            }
+            if($region != null && $country == null) {
+                if($filterByDate != null)
+                    $projects   =   Project::where('regionId', $region->id)->whereYear('created_at', $filterByDate)->get();
+                else
+                    $projects   =   Project::where('regionId', $region->id)->get();
+            }
+            if($region != null && $country != null) {
+                if($filterByDate != null)
+                    $projects   =   Project::where('regionId', $region->id)->where('countryId', $country->id)->whereYear('created_at', $filterByDate)->get();
+                else
+                    $projects   =   Project::where('regionId', $region->id)->where('countryId', $country->id)->get();
+            }
+        }
+        else
+            $projects   =   Project::where('id', $filterById)->get();
+        
         return view('dashboard', [
-            'financiera_chart' => $this->generateChart("Admin. / Financiera", $r->region, $r->country, $r->chartProject),
-            'operativa_chart' => $this->generateChart("Operativa", $r->region, $r->country, $r->chartProject),
-            'estrategica_tactica_chart' => $this->generateChart("Estratégica / Táctica", $r->region, $r->country, $r->chartProject),
-            'gestion_humana_chart' => $this->generateChart("Gestión Humana", $r->region, $r->country, $r->chartProject),
+            'financiera_chart' => $this->generateChart("Admin. / Financiera", $projects),
+            'operativa_chart' => $this->generateChart("Operativa", $projects),
+            'estrategica_tactica_chart' => $this->generateChart("Estratégica / Táctica", $projects),
+            'gestion_humana_chart' => $this->generateChart("Gestión Humana", $projects),
 
-            'projects_opens' => $this->getProjectsOpen($r->region, $r-> country),
-            'facturas_vencidas' => $this->getFechaFacturasVencidas(),
+            'projects_opens' => $this->getProjectsOpen($projects),
+            'facturas_vencidas' => $this->getFechaFacturasVencidas($r->region, $r->country, $r->chartProject),
+            'facturas_mora' => $this->getFechaFacturasMora($r->region, $r->country, $r->chartProject),
+            'years' => $this->getYearsDashboard(),
+            'filterByDate' => $filterByDate,
             'regions' => Region::all(),
             'countries' => $countries,
             'projects' => $projects,
@@ -53,8 +76,8 @@ class DashboardController extends Controller
             'country' => $country,
             'jsCountries' => Country::all(),
 
-            'chartProject' => ($chartProject > 0 ? true : false),
-            'chartProjectData' => ($chartProject > 0 ? Project::find($chartProject) : false)
+            'chartProject' => ($filterById > 0 ? true : false),
+            'chartProjectData' => ($filterById > 0 ? Project::find($filterById) : false)
         ]);
     }
 
@@ -63,24 +86,24 @@ class DashboardController extends Controller
             'projects' => $this->getProjectsOpen($region, $country, true)
         ]);
     }
+    public function viewAllProjects() {
+        return view('allprojects', [
+            'projects' => Project::all()
+        ]);
+    }
 
-    private function generateChart($rootName, $region, $country, $projectId = 0) {
-        if($projectId == 0) {
-            if($region == 0 && $country == 0)
-                $projects   =   Project::all();
-            if($region != 0 && $country == 0)
-                $projects   =   Project::where('regionId', $region)->get();
-            if($region != 0 && $country != 0)
-                $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
-        }
-        else
-            $projects   =   Project::where('id', $projectId)->get();
+    private function generateChart($rootName, $projects) {
         $result     =   [];
         if(sizeof($projects) == 0) {
             $porcentaje     =   [];
             $porcentaje["total_ok"]     =   0;
+            $porcentaje["total_countOk"]     =   0;
+            $porcentaje["total_outTime"]    =   0;
+            $porcentaje["total_countOutTime"]   =   0;
             $porcentaje["total_bad"]    =   0;
+            $porcentaje["total_countBad"]   =   0;
             $porcentaje['total_sub_ok'][0]    =   0;
+            $porcentaje['total_sub_outTime'][0] = 0;
             $porcentaje['total_sub_bad'][0]    =   0;
             $porcentaje['keys']         =   ["no-result"];
             return $porcentaje;
@@ -118,7 +141,7 @@ class DashboardController extends Controller
                                 $nWeek  =   floor($diff->days / 7)+1;
 
                                 if($nWeek > $dir->week_from)
-                                    $result[$i]["bad"][$x]     =   ['key' => $dir->name, 'value' => 1];
+                                    $result[$i]["outTime"][$x]     =   ['key' => $dir->name, 'value' => 1];
                                 else
                                     $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'value' => 1];
                             }
@@ -133,7 +156,7 @@ class DashboardController extends Controller
                                         $nWeek  =   floor($diff->days / 7)+1;
                                     
                                         if($nWeek > $z)
-                                            $result[$i]["bad"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
+                                            $result[$i]["outTime"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         else 
                                             $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
                                         break;
@@ -199,12 +222,28 @@ class DashboardController extends Controller
                 }
                 $replaceResult[$i]['bad'][$x]  =   $valor;
             }
+            for($x = 0; $x < sizeof($keys); $x++) {
+                $valor  =   0;
+                if(array_key_exists("outTime", $result[$i])) {
+                    foreach($result[$i]['outTime'] as $key=>$item) {
+                        if($item['key'] == $keys[$x]) {
+                            if($item['value'] > 1)
+                                $valor  =   1;
+                            else
+                                $valor  =   $item['value'];
+                            break;
+                        }
+                    }
+                }
+                $replaceResult[$i]['outTime'][$x]  =   $valor;
+            }
         }
-        // dd($replaceResult);
         $OkConteo       =   0;
         $SubOkConteo    =   [];
         $BadConteo      =   0;
         $SubBadConteo   =   [];
+        $outTimeConteo  =   0;
+        $outTime        =   [];
         for($i = 0; $i < sizeof($replaceResult); $i++) {
             foreach($replaceResult[$i]['ok'] as $key=>$item) {
                 $OkConteo   +=  $item;
@@ -220,16 +259,28 @@ class DashboardController extends Controller
                 else     
                     $SubBadConteo[$key]   +=  $item;
             }
+            foreach($replaceResult[$i]['outTime'] as $key=>$item) { 
+                $outTimeConteo   +=  $item;
+                if(!array_key_exists($key, $outTime))
+                    $outTime[$key]     =   $item;
+                else     
+                    $outTime[$key]   +=  $item;
+            }
         }
         // dd($SubOkConteo);
         $totalKeys      =   sizeof($result['keys']);
         $totalDirs      =   (sizeof($projects)*$totalKeys);
         $porcentaje     =   [];
         $porcentaje["total_ok"]     =   $OkConteo/$totalDirs*100;
+        $porcentaje["total_countOk"]     =   $OkConteo;
+        $porcentaje["total_outTime"]    =   $outTimeConteo/$totalDirs*100;
+        $porcentaje["total_countOutTime"]   =   $outTimeConteo;
         $porcentaje["total_bad"]    =   $BadConteo/$totalDirs*100;
-        foreach($SubOkConteo as $key=>$item) {
+        $porcentaje["total_countBad"]   =   $BadConteo;
+        foreach($SubOkConteo as $key=>$item) 
             $porcentaje['total_sub_ok'][]    =   ($item/sizeof($projects))*100;
-        }
+        foreach($outTime as $key=>$item) 
+            $porcentaje['total_sub_outTime'][]    =   ($item/sizeof($projects))*100;
         foreach($SubBadConteo as $key=>$item) 
             $porcentaje['total_sub_bad'][]    =   ($item/sizeof($projects))*100;
         $porcentaje['keys']         =   $result['keys'];
@@ -237,13 +288,7 @@ class DashboardController extends Controller
         return $porcentaje;
     }
 
-    private function getProjectsOpen($region, $country, $list = false) {
-        if($region == 0 && $country == 0)
-            $projects   =   Project::all();
-        if($region != 0 && $country == 0)
-            $projects   =   Project::where('regionId', $region)->get();
-        if($region != 0 && $country != 0)
-            $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
+    private function getProjectsOpen($projects, $list = false) {
         $actives    =   [];
         for($i = 0; $i < sizeof($projects); $i++) {
             $project    =   $projects[$i];
@@ -269,13 +314,64 @@ class DashboardController extends Controller
         return $bad;
     }
 
-    private function getFechaFacturasVencidas() {
-        $cronogramas    =   Cronograma::all();
+    private function getFechaFacturasVencidas($region, $country, $projectId = 0) {
+        if($projectId == 0) 
+            $cronogramas    =   Cronograma::all();
+        else
+            $cronogramas    =   Cronograma::where('projectId', $projectId)->get();
         $facturas       =   [];
         foreach($cronogramas as $item) {
-            if($item->fecha_pagoreal > $item->fecha_vencimiento)
-                $facturas[]     =   $item;
+            if($item->fecha_pagoreal > $item->fecha_vencimiento) {
+                if($region != 0 && $country == 0) {
+                    if($item->project->regionId == $region)
+                        $facturas[]     =   $item;
+                }
+                else {
+                    if($region != 0 && $country != 0) {
+                        if($item->project->regionId == $region && $item->project->countryId == $country)
+                            $facturas[]     =   $item;
+                    }
+                    else 
+                        $facturas[]     =   $item;
+                }
+            }
         }
         return $facturas;
+    }
+    private function getFechaFacturasMora($region, $country, $projectId = 0) {
+        if($projectId == 0) 
+            $cronogramas    =   Cronograma::all();
+        else
+            $cronogramas    =   Cronograma::where('projectId', $projectId)->get();
+        $facturas       =   [];
+        foreach($cronogramas as $item) {
+            $now    =   date('Y-m-d');
+            if($now > $item->fecha_vencimiento && $item->fecha_pagoreal == null) {
+                if($region != 0 && $country == 0) {
+                    if($item->project->regionId == $region)
+                        $facturas[]     =   $item;
+                }
+                else {
+                    if($region != 0 && $country != 0) {
+                        if($item->project->regionId == $region && $item->project->countryId == $country)
+                            $facturas[]     =   $item;
+                    }
+                    else 
+                        $facturas[]     =   $item;
+                }
+            }
+        }
+        return $facturas;
+    }
+
+    private function getYearsDashboard() {
+        $projects   =   Project::orderBy('created_at', 'asc')->get();
+        $years  =   [];
+        foreach($projects as $project) {
+            $date   =   date('Y', strtotime($project->created_at));
+            if(!in_array($date, $years))
+                $years[]    =   $date;
+        }
+        return $years;
     }
 }
