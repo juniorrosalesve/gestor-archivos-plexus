@@ -146,6 +146,7 @@
                     </label> 
                     <input type="file" name="file" class="file-input file-input-success" id="inputFileAddFile" autocomplete="off" required>
                 </div>
+                <input type="hidden" name="created_by" value="{{ Auth::user()->name }}">
                 <input type="hidden" name="projectId" value="{{ $project->id }}">
                 <input type="hidden" name="route" id="addFileRoute">
                 <input type="hidden" name="link" id="addFileLink">
