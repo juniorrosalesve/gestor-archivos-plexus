@@ -604,9 +604,9 @@
             $("#loading_add_file").show();
             const config    =   {
                 onUploadProgress: function(progressEvent) {
-                    const porcentComplete   =   Math.round((progressEvent.loaded / progressEvent.total));
+                    const porcentComplete   =   Math.round((progressEvent.loaded / progressEvent.total)*100);
                     $("#loading_add_file").css('width', porcentComplete+"%");
-                    $("#loading_add_file").html(loading_add_file+'%');
+                    $("#loading_add_file").html(porcentComplete+'%');
                     if(porcentComplete == 100)
                         $("#loading_add_file").hide();
                 },
