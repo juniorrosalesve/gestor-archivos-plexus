@@ -154,7 +154,7 @@
                     <span class="loading loading-spinner hidden"></span> Añadir
                 </button>
                 <div class="w-full bg-gray-200 rounded-full mt-3">
-                    <div class="bg-green-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" id="loading_add_file" style="width: 45%"> 45%</div>
+                    <div class="bg-green-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" id="loading_add_file" style="width: 0%"> 0%</div>
                 </div>
             </form>
         </div>
