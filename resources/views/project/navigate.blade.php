@@ -151,6 +151,9 @@
                 <button type="submit" class="btn btn-primary btn-sm mt-10 mb-2 float-right w-[50%]" id="btnAddFile">
                     <span class="loading loading-spinner hidden"></span> Añadir
                 </button>
+                <div class="w-full bg-gray-200 rounded-full mt-3">
+                    <div class="bg-green-600 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" id="loading_add_file" style="width: 45%"> 45%</div>
+                </div>
             </form>
         </div>
         <label class="modal-backdrop" for="modal_add_file">Close</label>
@@ -380,6 +383,7 @@
         let fileActualPreview   =   'image';
         let iCrono  =   1;
         $("#preview_UrlFile").hide();
+        $("#loading_add_file").hide();
 
         function navigate(name, route, id, weekFrom = 0, weekTo = 0, contador = 0) {
             const detailsId =   "#dir_"+id+" details"
@@ -590,12 +594,21 @@
                 });
         });
 
+        document.getElementById('modal_add_file').checked = true;
         $("#formAddFile").submit(function(e) {
             e.preventDefault();
             const data          =   new FormData(this);
             const button        =   $("#btnAddFile");
             const buttonSpan    =   $("#btnAddFile span");
+            $("#loading_add_file").show();
             const config    =   {
+                onUploadProgress: function(progressEvent) {
+                    const porcentComplete   =   Math.round((progressEvent.loaded / progressEvent.total));
+                    $("#loading_add_file").css('width', porcentComplete+"%");
+                    $("#loading_add_file").html(loading_add_file+'%');
+                    if(porcentComplete == 100)
+                        $("#loading_add_file").hide();
+                },
                 headers: {
                     'content-type': 'multipart/form-data'
                 }

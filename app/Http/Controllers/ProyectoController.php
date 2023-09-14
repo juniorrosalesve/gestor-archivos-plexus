@@ -311,7 +311,7 @@ class ProyectoController extends Controller
                         }
                     }
                 }
-                $dirs[$i]->alert    =   $isAlert;
+                $dirs[$i]->alert    =   ($dirs[$i]->name == 'Cronograma de pagos' ? false : $isAlert);
             }
             else
                 $dirs[$i]->alert    =   ($weeknd['totalWeek'] > $dirs[$i]->file_week ? true : false);
