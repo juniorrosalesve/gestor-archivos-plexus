@@ -111,6 +111,23 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="grid grid-cols-1 mt-5 ml-3">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Semana libre (opcional)</span>
+                            </label> 
+                            <?php $tonteo = 3; ?>
+                            @if (sizeof($weeks_free) > 0)
+                                @foreach ($weeks_free as $item)
+                                    <input type="date" value="{{ $item->week_free }}" name="week_free[]" class="input input-bordered mb-2" autocomplete="off">
+                                    <?php $tonteo--; ?>
+                                @endforeach
+                            @endif
+                            @for($i = 1; $i <= $tonteo; $i++)
+                                <input type="date" name="week_free[]" class="input input-bordered mb-2" autocomplete="off">
+                            @endfor
+                        </div>
+                    </div>
                 </div>
                 <hr />
                 <div class="ml-3 mt-7">

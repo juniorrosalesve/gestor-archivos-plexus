@@ -83,6 +83,7 @@
                             <div class="ml-3">
                                 <div class="form-control">
                                     <label class="label">
+                                        <input type="checkbox" name="financiera_no_aplica[]" class="checkbox checkbox-xs checkbox-warning" />
                                         <span class="label-text">Sub-carpeta <i class="text-red-500">*</i></span>
                                     </label> 
                                     <input type="text" name="financiera[]" value="{{ $item }}" readonly class="input input-bordered" autocomplete="off" required>
@@ -104,6 +105,7 @@
                             <div class="ml-3">
                                 <div class="form-control">
                                     <label class="label">
+                                        <input type="checkbox" name="operativa_no_aplica[]" class="checkbox checkbox-xs checkbox-warning" />
                                         <span class="label-text">Sub-carpeta <i class="text-red-500">*</i></span>
                                     </label> 
                                     <input type="text" name="operativa[]" value="{{ $item }}" readonly class="input input-bordered" autocomplete="off" required>
@@ -125,6 +127,7 @@
                             <div class="ml-3">
                                 <div class="form-control">
                                     <label class="label">
+                                        <input type="checkbox" name="estrategica_tactica_no_aplica[]" class="checkbox checkbox-xs checkbox-warning" />
                                         <span class="label-text">Sub-carpeta <i class="text-red-500">*</i></span>
                                     </label> 
                                     <input type="text" name="estrategica_tactica[]" value="{{ $item }}" readonly class="input input-bordered" autocomplete="off" required>
@@ -147,6 +150,7 @@
                             <div class="ml-3">
                                 <div class="form-control">
                                     <label class="label">
+                                        <input type="checkbox" name="gestion_humana_no_aplica[]" class="checkbox checkbox-xs checkbox-warning" />
                                         <span class="label-text">Sub-carpeta <i class="text-red-500">*</i></span>
                                     </label> 
                                     <input type="text" name="gestion_humana[]" value="{{ $item }}" readonly class="input input-bordered" autocomplete="off" required>

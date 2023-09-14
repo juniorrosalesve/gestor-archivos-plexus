@@ -23,7 +23,9 @@ class Directory extends Model
         'created_by',
         'edit_by',
         'deleted',
-        'created_at'
+        'created_at',
+        'week_selected',
+        'no_aplica'
     ];
 
     public function project() {

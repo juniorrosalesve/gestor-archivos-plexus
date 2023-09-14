@@ -11,6 +11,7 @@ use App\Models\Region;
 use App\Models\Country;
 use App\Models\Directory;
 use App\Models\Cronograma;
+use App\Models\SemanaLibre;
 
 class ProyectoController extends Controller
 {
@@ -41,7 +42,8 @@ class ProyectoController extends Controller
             'gerentes' => User::where('access', 'g')->orderBy('name', 'asc')->get(),
             'project' => $project,
             'root' => $root,
-            'dirs' => $dirs
+            'dirs' => $dirs,
+            'weeks_free' => SemanaLibre::where('projectId', $projectId)->get() 
         ]);
     }
     public function projects($regionId, $countryId) {
@@ -60,11 +62,13 @@ class ProyectoController extends Controller
             'country' => Country::find($countryId),
             'project' => Project::find($projectId),
             'dirs' => $dirs,
-            'cronogramas' => $cronogramas
+            'cronogramas' => $cronogramas,
+            'weeknd' => $this->weeknd($projectId)
         ]);
     }
 
     public function store(Request $r) {
+        // dd($r->all());
         $store  =   Project::create($r->except([
             '_token',
             'financiera',
@@ -77,10 +81,34 @@ class ProyectoController extends Controller
             'gestion_humana_week'
         ]));
 
-        $this->create_default_directory('Admin. / Financiera', $r->financiera, $r->financiera_week, $store->id);
-        $this->create_default_directory('Operativa', $r->operativa, $r->operativa_week, $store->id);
-        $this->create_default_directory('Estratégica / Táctica', $r->estrategica_tactica, $r->estrategica_tactica_week, $store->id);
-        $this->create_default_directory('Gestión Humana', $r->gestion_humana, $r->gestion_humana_week, $store->id);
+        $this->create_default_directory(
+            'Admin. / Financiera', 
+            $r->financiera, 
+            $r->financiera_week, 
+            ($r->has('financiera_no_aplica') ? $r->financiera_no_aplica : []), 
+            $store->id
+        );
+        $this->create_default_directory(
+            'Operativa', 
+            $r->operativa, 
+            $r->operativa_week, 
+            ($r->has('operativa_no_aplica') ? $r->operativa_no_aplica : []), 
+            $store->id
+        );
+        $this->create_default_directory(
+            'Estratégica / Táctica', 
+            $r->estrategica_tactica, 
+            $r->estrategica_tactica_week, 
+            ($r->has('estrategica_tactica_no_aplica') ? $r->estrategica_tactica_no_aplica : []), 
+            $store->id
+        );
+        $this->create_default_directory(
+            'Gestión Humana', 
+            $r->gestion_humana, 
+            $r->gestion_humana_week, 
+            ($r->has('gestion_humana_no_aplica') ? $r->gestion_humana_no_aplica : []), 
+            $store->id
+        );
 
         return "<script>alert('Proyecto creado correctamente!');location.href='".route('projects', [
             'regionId' => $store->regionId,
@@ -92,14 +120,92 @@ class ProyectoController extends Controller
             '_token',
             'dir_update_value',
             'dir_update_id',
-            'projectId'
+            'projectId',
+            'week_free'
         ]);
+        SemanaLibre::where('projectId', $r->projectId)->delete();
+        foreach($r->week_free as $item)
+        {
+            if($item != null)
+                SemanaLibre::create([
+                    'projectId' => $r->projectId,
+                    'week_free' => $item
+                ]);
+        }
+        $weeknd     =   $this->weeknd($r->projectId);
         for($i = 0; $i < sizeof($r->dir_update_id); $i++) {
-            $weeks  =   explode("-", $r->dir_update_value[$i]);
-            if(sizeof($weeks) > 1)
-                Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => $weeks[1]]);
-            else
-                Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => 0]);
+            $weeks  =   explode(",", $r->dir_update_value[$i]);
+            if(sizeof($weeks) > 1) {
+                if(sizeof($weeknd['freeList']) > 0)
+                {
+                    for($x = 0; $x < sizeof($weeks); $x++)
+                    {
+                        if($x > 0)
+                        {
+                            if($weeks[($x-1)] == $weeks[$x])
+                                $weeks[$x]  +=  1;
+                        }
+                        foreach($weeknd['freeList'] as $item)
+                        {
+                            if($item['week'] == $weeks[$x])
+                            {
+                                $weeks[$x]  +=  1;
+                                break;
+                            }
+                        }
+                    }
+                }
+                $insertWeeks    =   '';
+                for($x = 0; $x < sizeof($weeks); $x++) {
+                    if(($x+1) == sizeof($weeks))
+                        $insertWeeks    .=  $weeks[$x];
+                    else
+                        $insertWeeks    .=  $weeks[$x].',';
+                }
+                Directory::where('id', $r->dir_update_id[$i])->update([
+                    'week_from' => 0,
+                    'week_to' => 0,
+                    'week_selected' => $insertWeeks
+                ]);
+            }
+            else {
+                $weeks  =   explode("-", $r->dir_update_value[$i]);
+                if(sizeof($weeks) > 1) {
+                    if(sizeof($weeknd['freeList']) > 0)
+                    {
+                        foreach($weeknd['freeList'] as $item)
+                        {
+                            if($item['week'] == $weeks[0]) {
+                                $weeks[0]   +=  1;
+                                $weeks[1]   +=  1;
+                            }
+                            else {
+                                if($item['week'] > $weeks[0] && $item['week'] <= $weeks[1])
+                                    $weeks[1] += 1;
+                                else {
+                                    if(($weeks[1]+1) == $weeknd['totalWeek'])
+                                        $weeks[1]   += 1;
+                                }
+                            }
+                        }
+                    }
+                    Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => $weeks[1]]);
+                }
+                else {
+                    if(sizeof($weeknd['freeList']) > 0) {
+                        foreach($weeknd['freeList'] as $item)
+                        {
+                            if($item['week'] == $weeks[0])
+                                $weeks[0]   +=  1;
+                            else {
+                                if($weeks[0]+1 == $weeknd['totalWeek'])
+                                    $weeks[0] += 1;
+                            }
+                        }
+                    }
+                    Directory::where('id', $r->dir_update_id[$i])->update(['week_from' => $weeks[0], 'week_to' => 0]);
+                }
+            }
         }
         Project::where('id', $r->projectId)->update($update);
         return "<script>alert('Guardado correctamente!');location.href='".route('edit-project', [
@@ -127,47 +233,88 @@ class ProyectoController extends Controller
             'projectId' => $project->id
         ]).'"</script>';
     }
-    private function create_default_directory($root, $subdirs, $week, $projectId) {
+    private function create_default_directory($root, $subdirs, $week, $noaplica, $projectId) {
         $create     =   Directory::create([
             'projectId' => $projectId,
             'name' => $root
         ]);
         for($i = 0; $i < sizeof($subdirs); $i++)
         {
-            $weeks      =   explode("-", $week[$i]);
-            $week_from  =   $weeks[0];
-            $week_to    =   0;
-            if(sizeof($weeks) > 1)
-                $week_to    =   $weeks[1];
-            Directory::create([
-                'projectId' => $projectId,
-                'name' => $subdirs[$i],
-                'route' => 1,
-                'link' => $create->id,
-                'week_from' => $week_from,
-                'week_to' => $week_to
-            ]);
+            $weeks      =   explode(",", $week[$i]);
+            if(sizeof($weeks) > 1) {
+                Directory::create([
+                    'projectId' => $projectId,
+                    'name' => $subdirs[$i],
+                    'route' => 1,
+                    'link' => $create->id,
+                    'week_selected' => $week[$i],
+                    'no_aplica' => (isset($noaplica[$i]) ? true : false)
+                ]);
+            }
+            else {
+                $weeks      =   explode("-", $week[$i]);
+                $week_from  =   $weeks[0];
+                $week_to    =   0;
+                if(sizeof($weeks) > 1)
+                    $week_to    =   $weeks[1];
+                Directory::create([
+                    'projectId' => $projectId,
+                    'name' => $subdirs[$i],
+                    'route' => 1,
+                    'link' => $create->id,
+                    'week_from' => $week_from,
+                    'week_to' => $week_to,
+                    'no_aplica' => (isset($noaplica[$i]) ? true : false)
+                ]);
+            }
         }
     }
 
     /* Axios callback */
     public function navigate(Request $r) {
-        $dirs   =   Directory::where('projectId', $r->projectId)->where('route', ($r->route+1))->where('link', $r->link)->get();
+        $dirs       =   Directory::where('projectId', $r->projectId)->where('route', ($r->route+1))->where('link', $r->link)->get();
+        $weeknd     =   $this->weeknd($r->projectId);
         for($i = 0; $i < sizeof($dirs); $i++) {
             $dirs[$i]->created_atFormat   =   date('d-m-Y', strtotime($dirs[$i]->created_at));
 
-            $startDate = new \DateTime($dirs[$i]->project->inicia);
-            $endDate = new \DateTime($dirs[$i]->created_atFormat);
-
-            $diff = $endDate->diff($startDate);
-            $numberOfWeeks  =   floor($diff->days / 7);
-            $weekActual     =   $numberOfWeeks+1;
-            if($weekActual > $dirs[$i]->file_week)
-                $dirs[$i]->alert    =   true;
-            else
-                $dirs[$i]->alert    =   false;
-            if($dirs[$i]->type == 'directory')
+            if($dirs[$i]->type == 'directory') {
                 $dirs[$i]->count    =   Directory::where('link', $dirs[$i]->id)->count();
+                $isAlert    =   false;
+                if($dirs[$i]->week_selected != null) {
+                    $getWeeks   =   explode(",", $dirs[$i]->week_selected);
+                    foreach($getWeeks as $item)
+                    {
+                        if($weeknd['weekActual'] > $getWeeks) {
+                            if($dirs[$i]->count == 0) {
+                                $isAlert = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else {
+                    if($dirs[$i]->week_to != 0) {
+                        for($x = $dirs[$i]->week_from; $x <= $dirs[$i]->week_to; $x++)
+                        {
+                            if($weeknd['weekActual'] > $x) {
+                                if($dirs[$i]->count == 0) {
+                                    $isAlert = true;
+                                    break;
+                                }
+                            } 
+                        }
+                    }
+                    else {
+                        if($weeknd['weekActual'] > $dirs[$i]->week_from) {
+                            if($dirs[$i]->count == 0)
+                                $isAlert = true;
+                        }
+                    }
+                }
+                $dirs[$i]->alert    =   $isAlert;
+            }
+            else
+                $dirs[$i]->alert    =   ($weeknd['totalWeek'] > $dirs[$i]->file_week ? true : false);
         }
         return $dirs->toJson();
     }
@@ -195,6 +342,41 @@ class ProyectoController extends Controller
         );
         return Directory::create($data)->toJson();
         // return "<script>alert('Archivo subido correctamente!');location.href='".url()->previous()."'</script>";
+    }
+
+    private function weeknd($projectId) {
+        $project        =   Project::find($projectId);
+        $libre          =   SemanaLibre::where('projectId', $projectId)->get();
+        $weekFreeList   =   [];
+        if(date('D', strtotime($project->inicia)) == 'Mon')
+            $endDate    =   date("Y-m-d", strtotime($project->inicia."+ ".$project->semanas." week"." - 3 days"));
+        else
+            $endDate    =   date("Y-m-d", strtotime($project->inicia."+ ".$project->semanas." week"));
+        if(!empty($libre)) {
+            $i = 0;
+            foreach($libre as $item)
+            {
+                $weekFreeList[$i]['date']   =   $item->week_free;
+                $weekFreeList[$i]['week']   =   $this->getWeekNumber($project->inicia, $item->week_free);
+                $endDate    =   date("Y-m-d", strtotime($endDate.'+ 7 days'));
+                $i++;
+            }
+        }
+        return [
+            'endDate' => $endDate,
+            'totalWeek' => $this->getWeekNumber($project->inicia, $endDate),
+            'weekActual' => $this->getWeekNumber($project->inicia, date('Y-m-d')),
+            'freeList' => $weekFreeList
+        ];
+    }
+    private function getWeekNumber($a, $b)
+    {
+        $startDate = new \DateTime($a);
+        $endDate = new \DateTime($b);
+
+        $diff = $endDate->diff($startDate);
+        $numberOfWeeks  =   floor($diff->days / 7);
+        return ($numberOfWeeks+1);
     }
 
 

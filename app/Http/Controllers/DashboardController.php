@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use App\Http\Controllers\ProyectoController;
+
 use App\Models\Project;
 use App\Models\Directory;
 use App\Models\Region;
 use App\Models\Country;
 use App\Models\Cronograma;
+use App\Models\SemanaLibre;
 
 class DashboardController extends Controller
 {
@@ -114,11 +117,19 @@ class DashboardController extends Controller
             $dirs       =   Directory::where('link', $root->id)->get();
             $result[$i]["name"]  =   $project->name;
 
-            $startDate  =   new \DateTime($project->inicia);
-            $endDate    =   new \DateTime();
-
-            $diff   =   $endDate->diff($startDate);
-            $weeks  =   (floor($diff->days / 7)+1);
+            $weeks      =   $this->getWeekNumber($project->inicia, date('Y-m-d'));
+            $weeknd     =   $this->weeknd($project->id);
+            $isWeekFree =   false;
+            foreach($weeknd['freeList'] as $item)
+            {
+                if($item['week'] == $weeks)
+                {
+                    $isWeekFree = true;
+                    break;
+                }
+            }
+            if($isWeekFree)
+                continue;
 
             for($x = 0; $x < sizeof($dirs); $x++)
             {  
@@ -373,5 +384,47 @@ class DashboardController extends Controller
                 $years[]    =   $date;
         }
         return $years;
+    }
+
+
+    private function weeknd($projectId) {
+        $weekDays   =   [
+            'Mon' => 0,
+            'Tue' => 1,
+            'Wed' => 2,
+            'Thu' => 3,
+            'Fri' => 4,
+        ];
+        $project        =   Project::find($projectId);
+        $libre          =   SemanaLibre::where('projectId', $projectId)->get();
+        $weekFreeList   =   [];
+        if(date('D', strtotime($project->inicia)) == 'Mon')
+            $endDate    =   date("Y-m-d", strtotime($project->inicia."+ ".$project->semanas." week"." - 3 days"));
+        else
+            $endDate    =   date("Y-m-d", strtotime($project->inicia."+ ".$project->semanas." week"));
+        if(!empty($libre)) {
+            $i = 0;
+            foreach($libre as $item)
+            {
+                $weekFreeList[$i]['date']   =   $item->week_free;
+                $weekFreeList[$i]['week']   =   $this->getWeekNumber($project->inicia, $item->week_free);
+                $endDate    =   date("Y-m-d", strtotime($endDate.'+ 7 days'));
+                $i++;
+            }
+        }
+        return [
+            'endDate' => $endDate,
+            'totalWeek' => $this->getWeekNumber($project->inicia, $endDate),
+            'freeList' => $weekFreeList
+        ];
+    }
+    private function getWeekNumber($a, $b)
+    {
+        $startDate = new \DateTime($a);
+        $endDate = new \DateTime($b);
+
+        $diff = $endDate->diff($startDate);
+        $numberOfWeeks  =   floor($diff->days / 7);
+        return ($numberOfWeeks+1);
     }
 }

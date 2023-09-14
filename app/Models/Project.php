@@ -16,7 +16,8 @@ class Project extends Model
         'managerId',
         'inicia',
         'semanas',
-        'notes'
+        'notes',
+        'week_free'
     ];
 
     public function region() {

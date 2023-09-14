@@ -26,29 +26,36 @@ class UserSeeder extends Seeder
             'password' => bcrypt('1324'),
             'access' => 'a'
         ]);
-        // User::create([
-        //     'name' => 'Arturo Kimura',
-        //     'email' => 'arturo@admin.com',
-        //     'password' => bcrypt('12'),
-        //     'access' => 'd'
-        // ]);
-        // User::create([
-        //     'name' => 'Christian Espinosa',
-        //     'email' => 'christian@admin.com',
-        //     'password' => bcrypt('12'),
-        //     'access' => 'd'
-        // ]);
-        // User::create([
-        //     'name' => 'Manuel Meza',
-        //     'email' => 'manuel@admin.com',
-        //     'password' => bcrypt('12'),
-        //     'access' => 'd'
-        // ]);
-        // User::create([
-        //     'name' => 'Antelmo',
-        //     'email' => 'antelmo@admin.com',
-        //     'password' => bcrypt('12'),
-        //     'access' => 'd'
-        // ]);
+        User::create([
+            'name' => 'Arturo Kimura',
+            'email' => 'arturo@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'd'
+        ]);
+        User::create([
+            'name' => 'Christian Espinosa',
+            'email' => 'christian@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'd'
+        ]);
+        User::create([
+            'name' => 'Manuel Meza',
+            'email' => 'manuel@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'd'
+        ]);
+        User::create([
+            'name' => 'Antelmo',
+            'email' => 'antelmo@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'd'
+        ]);
+
+        User::create([
+            'name' => 'Gerente',
+            'email' => 'Gerente@admin.com',
+            'password' => bcrypt('12'),
+            'access' => 'g'
+        ]);
     }
 }

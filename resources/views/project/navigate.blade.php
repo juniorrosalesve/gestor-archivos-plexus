@@ -43,22 +43,18 @@
                     <dd class="text-gray-500">Fecha de inicio</dd>
                 </div>
                 <div class="flex flex-col items-center justify-center">
-                    <dt class="mb-2 text-3xl font-extrabold">{{ $project->semanas }}</dt>
+                    <dt class="mb-2 text-3xl font-extrabold">{{ $weeknd['totalWeek'] }}</dt>
                     <dd class="text-gray-500">Semanas</dd>
                 </div>
                 <div class="flex flex-col items-center justify-center">
                     <dt class="mb-2 text-3xl font-extrabold">
                         @php
-                            if(date('D', strtotime($project->inicia)) == 'Mon')
-                                $realDate   =   date("d-m-y", strtotime($project->inicia."+ ".$project->semanas." week"." - 3 days"));
-                            else
-                                $realDate   =   date("d-m-y", strtotime($project->inicia."+ ".$project->semanas." week"));
                             $canAddFile     =   true;
-                            $now    =   date('d-m-y');
-                            if($now > $realDate && \Auth::user()->access != 'a')
+                            $now    =   date('Y-m-d');
+                            if($now > $weeknd['endDate'] || \Auth::user()->access != 'a')
                                 $canAddFile =   false;
                         @endphp
-                        {{ $realDate }}
+                        {{ date('d-m-y', strtotime($weeknd['endDate'])) }}
                     </dt>
                     <dd class="text-gray-500">Fecha final</dd>
                 </div>
@@ -85,18 +81,20 @@
                 <div class="w-full">
                     <div>
                         <ul class="menu menu-xs bg-primary rounded-lg max-w-full w-full">
+                            <?php $i = 1; ?>
                             @foreach ($dirs as $dir)
                                 @if ($dir->route == 0 && $dir->link == 0)
-                                    <li id="dir_{{ $dir->id }}" onclick="navigate('{{ $dir->name }}', {{ $dir->route }}, {{ $dir->id }})">
+                                    <li id="dir_{{ $dir->id }}" onclick="navigate('{{ $dir->name }}', {{ $dir->route }}, {{ $dir->id }}, 0, 0, {{ $i }})">
                                         <details>
                                             <summary>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
                                                 </svg>
-                                                {{ $dir->name }}
+                                                {{ $i }}. {{ $dir->name }}
                                             </summary>
                                         </details>
                                     </li>
+                                    <?php $i++; ?>
                                 @endif
                             @endforeach
                         </ul>
@@ -288,7 +286,7 @@
                             $now        =   date('Y-m-d');
                         @endphp
                         @foreach ($cronogramas as $item)
-                            <tr @if($now > $item->fecha_vencimiento) style="background:rgb(252 165 165);" @endif>
+                            <tr @if($item->fecha_vencimiento == null && $now > $item->fecha_vencimiento) style="background:rgb(252 165 165);" @endif>
                                 <td>{{ $item->n_factura }}</td>
                                 <td>{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
                                 <td>{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
@@ -310,17 +308,29 @@
                     <tfoot>
                         <tr class="bg-gray-200">
                             <td colspan="4">Total facturado</td>
-                            <td>{{ $cronogramas[0]->moneda }}</td>
+                            @if (sizeof($cronogramas) > 0)
+                                <td>{{ $cronogramas[0]->moneda }}</td>
+                            @else
+                                <td>-</td>
+                            @endif
                             <td>{{ number_format($totalFacturado, 2, ',', '.') }}</td>
                         </tr>
                         <tr class="bg-green-400">
                             <td colspan="4">Pagado</td>
-                            <td>{{ $cronogramas[0]->moneda }}</td>
+                            @if (sizeof($cronogramas) > 0)
+                                <td>{{ $cronogramas[0]->moneda }}</td>
+                            @else
+                                <td>-</td>
+                            @endif
                             <td>{{ number_format($totalPagado, 2, ',', '.') }}</td>
                         </tr>
                         <tr class="bg-yellow-200">
                             <td colspan="4">Por cobrar</td>
-                            <td>{{ $cronogramas[0]->moneda }}</td>
+                            @if (sizeof($cronogramas) > 0)
+                                <td>{{ $cronogramas[0]->moneda }}</td>
+                            @else
+                                <td>-</td>
+                            @endif
                             <td>{{ number_format(($totalFacturado-$totalPagado), 2, ',', '.') }}</td>
                         </tr>
                     </tfoot>
@@ -371,10 +381,11 @@
         let iCrono  =   1;
         $("#preview_UrlFile").hide();
 
-        function navigate(name, route, id, weekFrom = 0, weekTo = 0) {
+        function navigate(name, route, id, weekFrom = 0, weekTo = 0, contador = 0) {
             const detailsId =   "#dir_"+id+" details"
             const url       =   '{{ url("/projects/navigate") }}?projectId={{ $project->id }}&route='+route+'&link='+id;
             const isOpen    =   $(detailsId).attr('open');
+            let tonteo      =   1;
 
             if (typeof isOpen !== 'undefined' && isOpen !== false) {
                 return false;
@@ -384,6 +395,7 @@
                 .then(function(res) {
                     if(res.status == 200) {
                         const data  =   res.data;
+                        console.log(data);
                         if($(detailsId+" ul").length) 
                             $(detailsId+" ul").remove();
                         let prepareAppend       =   '<ul id="dir_id_'+id+'">';
@@ -400,17 +412,38 @@
                         if(data.length > 0) {
                             for(var i = 0; i < data.length; i++) {
                                 if(data[i].type == 'directory') {
+                                    if(data[i].no_aplica == true)
+                                        continue;
                                     // if({{ $weekActual }} > data[i].week_from)
                                     //     prepareAppend   +=      '<li id="dir_'+data[i].id+'" class="text-red-600" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+')">';
                                     // else
-                                    prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
-                                    prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
-                                    if(data[i].week_to == 0)
-                                        prepareAppend   +=      data[i].name+' [ '+data[i].week_from+' ]';
+                                    if(!data[i].alert)
+                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
                                     else
-                                        prepareAppend   +=      data[i].name+' [ '+data[i].week_from+'-'+data[i].week_to+' ]';
+                                        prepareAppend   +=      '<li class="bg-red-200" id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
+                                    prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
+                                    
+                                    if(data[i].week_selected != null) {
+                                        const strArry   =   data[i].week_selected.split(",");
+                                        let strBuild    =   '';
+                                        for(var y = 0; y < strArry.length; y++) {
+                                            if(y+1 == strArry.length)
+                                                strBuild    +=  strArry[y];
+                                            else
+                                                strBuild    +=  strArry[y]+' , ';
+                                        }
+                                        prepareAppend   +=  contador+'.'+tonteo+' '+data[i].name+' [ '+strBuild+' ]';
+                                    }
+                                    else {
+                                        if(data[i].week_to == 0)
+                                            prepareAppend   +=      contador+'.'+tonteo+' '+data[i].name+' [ '+data[i].week_from+' ]';
+                                        else
+                                            prepareAppend   +=      contador+'.'+tonteo+' '+data[i].name+' [ '+data[i].week_from+'-'+data[i].week_to+' ]';
+                                    }
+
                                     prepareAppend   +=  '<span>'+data[i].count+'</span>';
                                     prepareAppend   +=      '</summary></details></li>';
+                                    tonteo++;
                                 }
                             }
                             for(var i = 0; i < data.length; i++) {
