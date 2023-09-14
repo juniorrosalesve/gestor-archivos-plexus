@@ -51,8 +51,10 @@
                         @php
                             $canAddFile     =   true;
                             $now    =   date('Y-m-d');
-                            if($now > $weeknd['endDate'] || \Auth::user()->access != 'a')
-                                $canAddFile =   false;
+                            if(\Auth::user()->access != 'a') {
+                                if($now > $weeknd['endDate'])
+                                    $canAddFile =   false;
+                            }
                         @endphp
                         {{ date('d-m-y', strtotime($weeknd['endDate'])) }}
                     </dt>
@@ -594,7 +596,6 @@
                 });
         });
 
-        document.getElementById('modal_add_file').checked = true;
         $("#formAddFile").submit(function(e) {
             e.preventDefault();
             const data          =   new FormData(this);
