@@ -32,9 +32,19 @@ class UserController extends Controller
             'ranks' => $this->ranks
         ]);
     }
+    public function edit($userId) {
+        return view('users.edit', [
+            'user' => User::find($userId),
+            'ranks' => $this->ranks
+        ]);
+    }
 
     public function store(Request $r) {
         User::create($r->except('_token'));
         return '<script>alert("Añadido correctamente");location.href="'.url('/users?access='.$r->access).'";</script>';
+    }
+    public function update(Request $r) {
+        User::where('id', $r->userId)->update($r->except(['_token', 'userId']));
+        return '<script>alert("Guardado correctamente");location.href="'.route('edit-user', ['userId' => $r->userId]).'";</script>';
     }
 }

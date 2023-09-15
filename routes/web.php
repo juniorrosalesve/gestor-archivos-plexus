@@ -15,6 +15,7 @@ Route::get('/', function () {
 })->name('welcome');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+
     Route::prefix('dashboard')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/projects/{region}/{country}', [DashboardController::class, 'viewProjectOpens'])->name('dashboard-projects');
@@ -36,14 +37,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/navigate', [ProyectoController::class, 'navigate'])->name('navigate');
         Route::post('/navigate/addFile', [ProyectoController::class, 'navigateAddFile'])->name('navigate-add-file');
         Route::post('/navigate/addDir', [ProyectoController::class, 'navigateAddDir'])->name('navigate-add-dir');
+
+        Route::get('delete-file/{fileId}', [ProyectoController::class, 'deleteFile'])->name('delete-file');
     });
 
     Route::prefix('users')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('users');
         Route::get('/create-user', [UserController::class, 'create'])->name('create-user');
+        Route::get('/edit-user/{userId}', [UserController::class, 'edit'])->name('edit-user');
 
         /* STORE */
         Route::post('/store-user', [UserController::class, 'store'])->name('store-user');
+        Route::post('/update-user', [UserController::class, 'update'])->name('update-user');
     });
 
     Route::prefix('regions')->group(function(){

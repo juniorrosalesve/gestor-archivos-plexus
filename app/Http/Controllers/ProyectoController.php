@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 use App\Models\User;
@@ -232,6 +233,22 @@ class ProyectoController extends Controller
             'countryId' => $project->countryId,
             'projectId' => $project->id
         ]).'"</script>';
+    }
+    public function deleteFile($fileId) {
+        $file   =   Directory::find($fileId);
+        $user   =   \Auth::user();
+        if($user->access == 'a') {
+            Storage::delete('public/plexus/'.$file->file_path);
+            Directory::where('id', $fileId)->delete();
+        } else 
+            Directory::where('id', $fileId)->update([
+                'deleted_by' => $user->name
+            ]);
+        return "<script>alert('Eliminado correctamente!');location.href='".route('project', [
+            'regionId' => $file->project->regionId,
+            'countryId' => $file->project->countryId,
+            'projectId' => $file->projectId
+        ])."'</script>";
     }
     private function create_default_directory($root, $subdirs, $week, $noaplica, $projectId) {
         $create     =   Directory::create([

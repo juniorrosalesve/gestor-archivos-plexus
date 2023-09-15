@@ -26,14 +26,16 @@
                     </ul>
                 </div>
                 <div>
-                    <a href="{{ url('dashboard') }}?projectId={{ $project->id }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer inline-block mr-5"><title>Estadísticas de este proyecto</title><path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z" /></svg>
-                    </a>
-                    <a href="{{ route('edit-project', [
-                            'projectId' => $project->id
-                        ]) }}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer inline-block"><title>Editar Proyecto</title><path d="M4 18H12.13L11 19.13V20H4C2.9 20 2 19.11 2 18V6C2 4.89 2.89 4 4 4H10L12 6H20C21.1 6 22 6.89 22 8V10.15C21.74 10.06 21.46 10 21.17 10C20.75 10 20.36 10.11 20 10.3V8H4V18M22.85 13.47L21.53 12.15C21.33 11.95 21 11.95 20.81 12.15L19.83 13.13L21.87 15.17L22.85 14.19C23.05 14 23.05 13.67 22.85 13.47M13 19.96V22H15.04L21.17 15.88L19.13 13.83L13 19.96Z" /></svg>
-                    </a>
+                    @if(Auth::user()->access == 'a')
+                        <a href="{{ url('dashboard') }}?projectId={{ $project->id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer inline-block mr-5"><title>Estadísticas de este proyecto</title><path d="M17.45,15.18L22,7.31V19L22,21H2V3H4V15.54L9.5,6L16,9.78L20.24,2.45L21.97,3.45L16.74,12.5L10.23,8.75L4.31,19H6.57L10.96,11.44L17.45,15.18Z" /></svg>
+                        </a>
+                        <a href="{{ route('edit-project', [
+                                'projectId' => $project->id
+                            ]) }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-8 cursor-pointer inline-block"><title>Editar Proyecto</title><path d="M4 18H12.13L11 19.13V20H4C2.9 20 2 19.11 2 18V6C2 4.89 2.89 4 4 4H10L12 6H20C21.1 6 22 6.89 22 8V10.15C21.74 10.06 21.46 10 21.17 10C20.75 10 20.36 10.11 20 10.3V8H4V18M22.85 13.47L21.53 12.15C21.33 11.95 21 11.95 20.81 12.15L19.83 13.13L21.87 15.17L22.85 14.19C23.05 14 23.05 13.67 22.85 13.47M13 19.96V22H15.04L21.17 15.88L19.13 13.83L13 19.96Z" /></svg>
+                        </a>
+                    @endif
                 </div>
             </div>
             <hr />
@@ -193,14 +195,11 @@
                 <a download="#" href="#" title="Descargar" id="preview_DownloadFile">
                     <button class="btn btn-primary btn-xs">Descargar</button>
                 </a>
-                @if (Auth::user()->access == 'a')
-                    <button class="btn btn-warning btn-xs">Eliminar</button>
-                @endif
+                <button class="btn btn-warning btn-xs" onclick="removeFile()">Eliminar</button>
             </div>
             <hr />
-            <div class="w-full h-full mt-3">
-                <img src="#" alt="preview" id="preview_Image">
-                <iframe src="#" id="preview_UrlFile" id="previewFile" class="mx-auto w-full min-h-[800px]" frameborder="0"></iframe>
+            <div class="w-full h-full mt-3" id="xpreview_file">
+
             </div>
         </div>
         <form method="dialog" class="modal-backdrop">
@@ -382,9 +381,8 @@
     <script>
         const cronogramas   =   @json($cronogramas);
         let sendingRequest      =   false;
-        let fileActualPreview   =   'image';
         let iCrono  =   1;
-        $("#preview_UrlFile").hide();
+        let previewFileActualId     =   0;
         $("#loading_add_file").hide();
 
         function navigate(name, route, id, weekFrom = 0, weekTo = 0, contador = 0) {
@@ -454,17 +452,34 @@
                             }
                             for(var i = 0; i < data.length; i++) {
                                 if(data[i].type != 'directory') {
-                                    prepareAppend   +=  '<li><a href="javascript:void(0);" onclick="openModalPreviewFile(\''+data[i].name+'\', \''+data[i].file_path+'\', \''+data[i].type+'\')">';
-                                    if(data.type !== 'image')
-                                        prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
-                                    else
-                                        prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>';
-                                    prepareAppend   +=  data[i].name+'.'+data[i].file_ext;
-                                    if(data[i].alert)
-                                        prepareAppend   +=  '<span class="float-right text-xs italic text-yellow-600">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+']</span>'
-                                    else
-                                        prepareAppend   +=  '<span class="float-right text-xs italic">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+']</span>'
-                                    prepareAppend   +=  '</a></li>'
+                                    if(data[i].deleted_by != null) {
+                                        @if(\Auth::user()->access == 'a')
+                                            prepareAppend   +=  '<li class="bg-red-200"><a href="javascript:void(0);" onclick="openModalPreviewFile('+data[i].id+', \''+data[i].name+'\', \''+data[i].file_path+'\', \''+data[i].type+'\')">';
+                                            if(data.type !== 'image')
+                                                prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
+                                            else
+                                                prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>';
+                                            prepareAppend   +=  data[i].name+'.'+data[i].file_ext;
+                                            if(data[i].alert)
+                                                prepareAppend   +=  '<span class="float-right text-xs italic text-yellow-600">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+'] | Eliminado por: '+data[i].deleted_by+'</span>'
+                                            else
+                                                prepareAppend   +=  '<span class="float-right text-xs italic">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+'] | Eliminado por: '+data[i].deleted_by+'</span>'
+                                            prepareAppend   +=  '</a></li>'
+                                        @endif
+                                    }
+                                    else {
+                                        prepareAppend   +=  '<li><a href="javascript:void(0);" onclick="openModalPreviewFile('+data[i].id+', \''+data[i].name+'\', \''+data[i].file_path+'\', \''+data[i].type+'\')">';
+                                        if(data.type !== 'image')
+                                            prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
+                                        else
+                                            prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>';
+                                        prepareAppend   +=  data[i].name+'.'+data[i].file_ext;
+                                        if(data[i].alert)
+                                            prepareAppend   +=  '<span class="float-right text-xs italic text-yellow-600">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+']</span>'
+                                        else
+                                            prepareAppend   +=  '<span class="float-right text-xs italic">'+data[i].created_by+' | '+data[i].created_atFormat+' | ['+data[i].file_week+']</span>'
+                                        prepareAppend   +=  '</a></li>'
+                                    }
                                 }
                             }
                         }
@@ -520,26 +535,20 @@
             $("#addDirLink").val(id);
             document.getElementById('modal_add_dir').checked = true;
         }
-        function openModalPreviewFile(name, file_path, type) {
+        function openModalPreviewFile(id, name, file_path, type) {
             $("#preview_NameFile").html(name);
             $("#preview_DownloadFile").attr('href', '{{ URL("storage/plexus") }}/'+file_path);
             $("#preview_DownloadFile").attr('download', file_path);
-            
-            if(type == 'image')
-                $("#preview_Image").attr('src', '{{ URL("storage/plexus") }}/'+file_path);
-            else
-                $("#preview_UrlFile").attr('src', 'https://docs.google.com/gview?url={{ URL("storage/plexus") }}/'+file_path+'&embedded=true') 
-            if(fileActualPreview != type) {
-                if(fileActualPreview == 'docs' && type == 'image') {
-                    $("#preview_UrlFile").hide();
-                    $("#preview_Image").show();
-                }
-                if(fileActualPreview == 'image' && type == 'docs') {
-                    $("#preview_Image").hide();
-                    $("#preview_UrlFile").show();
-                }
+        
+            if(type == 'image') {
+                const setImage  =   '<img src="{{ URL("storage/plexus") }}/'+file_path+'" alt="preview" id="preview_Image">'
+                $("#xpreview_file").html(setImage);
             }
-            fileActualPreview   =   type;
+            else {
+                const setFile   =   '<iframe src="https://docs.google.com/gview?url={{ URL("storage/plexus") }}/'+file_path+'&embedded=true" id="preview_UrlFile" id="previewFile" class="mx-auto w-full min-h-[800px]" frameborder="0"></iframe>';
+                $("#xpreview_file").html(setFile);
+            }
+            previewFileActualId     =   id;
             modal_previewFile.showModal();
         }
         function managerCronograma() {
@@ -621,7 +630,7 @@
                     if(res.status == 200)
                     {
                         const data  =   res.data;
-                        let prepareAppend   =  '<li><a href="javascript:void(0);" onclick="openModalPreviewFile(\''+data.name+'\', \''+data.file_path+'\', \''+data.type+'\')">';
+                        let prepareAppend   =  '<li><a href="javascript:void(0);" onclick="openModalPreviewFile('+data.id+', \''+data.name+'\', \''+data.file_path+'\', \''+data.type+'\')">';
                         if(data.type !== 'image')
                             prepareAppend   +=  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
                         else
@@ -644,5 +653,13 @@
                     button.prop('disabled', false);
                 });
         });
+
+        function removeFile() {
+            if(previewFileActualId == 0)
+                return;
+            if(confirm('Esta seguro que desea eliminar?')) {
+                location.href='{{ url("projects/delete-file") }}/'+previewFileActualId;
+            }
+        }
     </script>
 @endsection

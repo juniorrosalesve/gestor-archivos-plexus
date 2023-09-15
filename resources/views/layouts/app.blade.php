@@ -78,7 +78,8 @@
                         </li>
                     @else 
                         <li style="margin-top:110px;">
-                            <a href="{{ route('manager-list') }}" @if (\Request::route()->getName() == 'manager-list')
+                            <a href="{{ route('manager-list') }}" @if (\Request::route()->getName() == 'manager-list' || 
+                                \Request::route()->getName() == 'project')
                                 class="bg-base-300 text-secondary-content rounded-lg"
                             @endif>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6"><title>tie</title><path d="M6,2L10,6L7,17L12,22L17,17L14,6L18,2Z" /></svg>

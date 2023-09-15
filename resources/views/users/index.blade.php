@@ -34,7 +34,11 @@
                     <tbody>
                         @foreach ($users as $user)
                             <tr>
-                                <td>{{ $user->name }}</td>
+                                <td>
+                                    <a href="{{ route('edit-user', [
+                                        'userId' => $user->id
+                                    ]) }}" class="underline">{{ $user->name }}</a>
+                                </td>
                                 <td>{{ $user->email }}</td>
                             </tr>
                         @endforeach

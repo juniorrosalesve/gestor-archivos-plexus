@@ -237,7 +237,7 @@
                         </div>
                     @endif
                     <div class="my-3 bg-base-200 p-2 rounded">
-                        <h1 class="mb-3 text-lg">Historial de facturas atrasadas</h1>
+                        <h1 class="mb-3 text-lg">Historial de facturas con pagos atrasados</h1>
                         <table id="table">
                             <thead>
                                 <tr>

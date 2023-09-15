@@ -85,8 +85,13 @@ class DashboardController extends Controller
     }
 
     public function viewProjectOpens($region, $country) {
+        $projects   =   Project::all();
+        if($region != 0 && $country == 0)
+            $projects   =   Project::where('regionId', $region)->get();
+        if($region != 0 && $country != 0)
+            $projects   =   Project::where('regionId', $region)->where('countryId', $country)->get();
         return view('projects', [
-            'projects' => $this->getProjectsOpen($region, $country, true)
+            'projects' => $this->getProjectsOpen($projects, true)
         ]);
     }
     public function viewAllProjects() {
@@ -115,6 +120,7 @@ class DashboardController extends Controller
             $project    =   $projects[$i];
             $root       =   Directory::where('projectId', $project->id)->where('name', $rootName)->first();
             $dirs       =   Directory::where('link', $root->id)->get();
+
             $result[$i]["name"]  =   $project->name;
 
             $weeks      =   $this->getWeekNumber($project->inicia, date('Y-m-d'));
@@ -134,9 +140,11 @@ class DashboardController extends Controller
             for($x = 0; $x < sizeof($dirs); $x++)
             {  
                 $dir    =   $dirs[$x];
+                if($dir->no_aplica == true)  
+                    continue;
                 
                 if($i+1 == sizeof($projects))
-                    $result["keys"][$x]   =   $dir->name;
+                    $result["keys"][]   =   $dir->name;
                 if($dir->type == 'directory' && $dir->week_from > 0)
                 {
                     $files  =   Directory::where('link', $dir->id)->where('type', '!=', 'directory')->get();
@@ -144,33 +152,52 @@ class DashboardController extends Controller
                     // que se subio para este directorio para saber si esta todo al día o con retrasos. 
                     if(sizeof($files) > 0) {
                         foreach($files as $file) {
-                            if($dir->week_to == 0) {
-                                $startDate  =   new \DateTime($project->inicia);
-                                $endDate    =   new \DateTime($file->created_at);
-
-                                $diff   =   $endDate->diff($startDate);
-                                $nWeek  =   floor($diff->days / 7)+1;
-
-                                if($nWeek > $dir->week_from)
-                                    $result[$i]["outTime"][$x]     =   ['key' => $dir->name, 'value' => 1];
-                                else
+                            if($dir->week_selected != null) {
+                                $sWeeks     =   explode(",", $dir->week_selected);
+                                $outTimeWeekSelected   =   false;
+                                $fileWeek   =   $this->getWeekNumber($project->inicia, $file->created_at);
+                                foreach($sWeeks as $sweek) {
+                                    if($sweek == $file->file_week) {
+                                        if($fileWeek > $sweek) {
+                                            $outTimeWeekSelected = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if(!$outTimeWeekSelected) 
                                     $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'value' => 1];
+                                else
+                                    $result[$i]["outTime"][$x]     =   ['key' => $dir->name, 'value' => 1];
                             }
                             else {
-                                for($z = $dir->week_from; $z <= $dir->week_to; $z++)
-                                {
-                                    if($z == $file->file_week) {
-                                        $startDate  =   new \DateTime($project->inicia);
-                                        $endDate    =   new \DateTime($file->created_at);
-        
-                                        $diff   =   $endDate->diff($startDate);
-                                        $nWeek  =   floor($diff->days / 7)+1;
-                                    
-                                        if($nWeek > $z)
-                                            $result[$i]["outTime"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
-                                        else 
-                                            $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
-                                        break;
+                                if($dir->week_to == 0) {
+                                    $startDate  =   new \DateTime($project->inicia);
+                                    $endDate    =   new \DateTime($file->created_at);
+
+                                    $diff   =   $endDate->diff($startDate);
+                                    $nWeek  =   floor($diff->days / 7)+1;
+
+                                    if($nWeek > $dir->week_from)
+                                        $result[$i]["outTime"][$x]     =   ['key' => $dir->name, 'value' => 1];
+                                    else
+                                        $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'value' => 1];
+                                }
+                                else {
+                                    for($z = $dir->week_from; $z <= $dir->week_to; $z++)
+                                    {
+                                        if($z == $file->file_week) {
+                                            $startDate  =   new \DateTime($project->inicia);
+                                            $endDate    =   new \DateTime($file->created_at);
+            
+                                            $diff   =   $endDate->diff($startDate);
+                                            $nWeek  =   floor($diff->days / 7)+1;
+                                        
+                                            if($nWeek > $z)
+                                                $result[$i]["outTime"][$x]    =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
+                                            else 
+                                                $result[$i]["ok"][$x]     =   ['key' => $dir->name, 'to' => $dir->week_to, 'value' => $z];
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -179,12 +206,21 @@ class DashboardController extends Controller
                     // en cambio calculamos semana o fecha de entrega de archivos para este directorio.
                     // para saber si aún están a tiempo para subir los archivos o se atrasaron.
                     else {
-                        $startDate  =   new \DateTime($project->inicia);
-                        $endDate    =   new \DateTime($dir->created_at);
-
-                        $diff   =   $endDate->diff($startDate);
-                        $nWeek  =   (floor($diff->days / 7)+1);
-                        if($dir->week_from < $weeks)
+                        $checkBad   =   false;
+                        if($dir->week_selected != null) {
+                            $sWeeks  =   explode(",", $dir->week_selected);
+                            foreach($sWeeks as $sweek) {
+                                if($weeknd['weekActual'] > $sweek) {
+                                    $checkBad   =   true;
+                                    break;
+                                }
+                            }
+                        }
+                        else {
+                            if($weeknd['weekActual'] > $dir->week_from)
+                                $checkBad   =   true;
+                        }
+                        if($checkBad)
                             $result[$i]["bad"][$x]      =   ['key' => $dir->name, 'value' => 1];
                         else
                             $result[$i]["ok"][$x]       =   ['key' => $dir->name, 'value' => 1];
@@ -315,11 +351,12 @@ class DashboardController extends Controller
         return $actives;
     }
     public function checkProjectRetrasado($projectId) {
+        $projects   =   Project::where('id', $projectId)->get();
         $bad    =   false;
-        $f  =   $this->generateChart("Admin. / Financiera", 0, 0, $projectId);
-        $o  =   $this->generateChart("Operativa", 0, 0, $projectId);
-        $e  =   $this->generateChart("Estratégica / Táctica", 0, 0, $projectId);
-        $g  =   $this->generateChart("Gestión Humana", 0, 0, $projectId);
+        $f  =   $this->generateChart("Admin. / Financiera", $projects);
+        $o  =   $this->generateChart("Operativa", $projects);
+        $e  =   $this->generateChart("Estratégica / Táctica", $projects);
+        $g  =   $this->generateChart("Gestión Humana", $projects);
         if($f['total_bad'] > 0 || $o['total_bad'] > 0 || $e['total_bad'] > 0 || $g['total_bad'] > 0)
             $bad = true;
         return $bad;
@@ -388,13 +425,6 @@ class DashboardController extends Controller
 
 
     private function weeknd($projectId) {
-        $weekDays   =   [
-            'Mon' => 0,
-            'Tue' => 1,
-            'Wed' => 2,
-            'Thu' => 3,
-            'Fri' => 4,
-        ];
         $project        =   Project::find($projectId);
         $libre          =   SemanaLibre::where('projectId', $projectId)->get();
         $weekFreeList   =   [];
@@ -415,6 +445,7 @@ class DashboardController extends Controller
         return [
             'endDate' => $endDate,
             'totalWeek' => $this->getWeekNumber($project->inicia, $endDate),
+            'weekActual' => $this->getWeekNumber($project->inicia, date('Y-m-d')),
             'freeList' => $weekFreeList
         ];
     }
