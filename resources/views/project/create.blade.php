@@ -73,6 +73,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="grid grid-cols-1 mt-5 ml-3">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Semanas libres (opcional)</span>
+                        </label>
+                        <input type="date" name="week_free[]" class="input input-bordered mb-2" autocomplete="off"> 
+                        <input type="date" name="week_free[]" class="input input-bordered mb-2" autocomplete="off"> 
+                        <input type="date" name="week_free[]" class="input input-bordered mb-2" autocomplete="off"> 
+                    </div>
+                </div>
                 <hr />
                 <div class="ml-3 mt-7">
                     <h1 class="text-2xl">Estructura</h1>

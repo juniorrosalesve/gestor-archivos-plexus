@@ -30,4 +30,8 @@ class Project extends Model
     public function directories() {
         return $this->hasMany('App\Models\Directory', 'projectId');
     }
+
+    public function gerente() {
+        return $this->belongsTo('App\Models\User', 'managerId');
+    }
 }

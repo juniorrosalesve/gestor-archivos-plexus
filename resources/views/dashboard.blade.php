@@ -273,6 +273,81 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if ($chartProject)
+                        <h3 class="font-bold text-lg mb-3 mt-10">Cronograma de pagos</h3>
+                        <hr />
+                        <div class="w-full mt-3">
+                            <table id="table">
+                                <thead>
+                                    <tr>
+                                        <td>N° Factura</td>
+                                        <td>Fecha factura</td>
+                                        <td>Fecha vencimiento</td>
+                                        <td>Fecha pago real</td>
+                                        <td>Moneda</td>
+                                        <td>Monto</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $totalFacturado     =   0;
+                                        $totalPagado        =   0;
+                                        $porCobrar          =   0;
+                                        $now        =   date('Y-m-d');
+                                    @endphp
+                                    @foreach ($cronogramas as $item)
+                                        <tr @if($item->fecha_vencimiento == null && $now > $item->fecha_vencimiento) style="background:rgb(252 165 165);" @endif>
+                                            <td>{{ $item->n_factura }}</td>
+                                            <td>{{ date('d-m-Y', strtotime($item->fecha_factura)) }}</td>
+                                            <td>{{ date('d-m-Y', strtotime($item->fecha_vencimiento)) }}</td>
+                                            @if ($item->fecha_pagoreal != null)
+                                                <td>{{ date('d-m-Y', strtotime($item->fecha_pagoreal)) }}</td>
+                                            @else
+                                                <td>-</td>
+                                            @endif
+                                            <td>{{ $item->moneda }}</td>
+                                            <td>{{ number_format($item->monto, 2, ',', '.') }}</td>
+                                        </tr>
+                                        @php
+                                            $totalFacturado     +=  $item->monto;
+                                            if($item->fecha_pagoreal != null)
+                                                $totalPagado    +=  $item->monto;
+                                        @endphp
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-gray-200">
+                                        <td colspan="4">Total facturado</td>
+                                        @if (sizeof($cronogramas) > 0)
+                                            <td>{{ $cronogramas[0]->moneda }}</td>
+                                        @else
+                                            <td>-</td>
+                                        @endif
+                                        <td>{{ number_format($totalFacturado, 2, ',', '.') }}</td>
+                                    </tr>
+                                    <tr class="bg-green-400">
+                                        <td colspan="4">Pagado</td>
+                                        @if (sizeof($cronogramas) > 0)
+                                            <td>{{ $cronogramas[0]->moneda }}</td>
+                                        @else
+                                            <td>-</td>
+                                        @endif
+                                        <td>{{ number_format($totalPagado, 2, ',', '.') }}</td>
+                                    </tr>
+                                    <tr class="bg-yellow-200">
+                                        <td colspan="4">Por cobrar</td>
+                                        @if (sizeof($cronogramas) > 0)
+                                            <td>{{ $cronogramas[0]->moneda }}</td>
+                                        @else
+                                            <td>-</td>
+                                        @endif
+                                        <td>{{ number_format(($totalFacturado-$totalPagado), 2, ',', '.') }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    @endif
                 </div> 
             </div>
         </div>

@@ -74,7 +74,11 @@
                             if($weekActual >= $project->semanas)
                                 $weekActual     =   $project->semanas;
 
-                            echo $weekActual
+                            for($i = 0; $i < sizeof($weeknd['freeList']); $i++) {
+                                if($weekActual <= $weeknd['freeList'][$i]['week'])
+                                    $weekActual--;
+                            }
+                            echo $weekActual;
                         @endphp
                     </dt>
                     <dd class="text-gray-500">Semana actual</dd>
@@ -88,7 +92,7 @@
                             <?php $i = 1; ?>
                             @foreach ($dirs as $dir)
                                 @if ($dir->route == 0 && $dir->link == 0)
-                                    <li id="dir_{{ $dir->id }}" onclick="navigate('{{ $dir->name }}', {{ $dir->route }}, {{ $dir->id }}, 0, 0, {{ $i }})">
+                                    <li id="dir_{{ $dir->id }}" onclick="navigate('{{ $dir->name }}', {{ $dir->route }}, {{ $dir->id }}, null, 0, 0, {{ $i }})">
                                         <details>
                                             <summary>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -105,11 +109,38 @@
                     </div>
                 </div>
                 <div class="mt-5">
-                    <h1 class="italic">Notas del proyecto</h1>
+                    <h1 class="text-2xl">Información del proyecto</h1>
+                    <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
+                        <div class="flex flex-col items-center justify-center">
+                            <dt class="mb-2 text-lg font-extrabold">{{ $region->name }}</dt>
+                            <dd class="text-gray-500">Región</dd>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <dt class="mb-2 text-lg font-extrabold">{{ $region->user->name }}</dt>
+                            <dd class="text-gray-500">Director</dd>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <dt class="mb-2 text-lg font-extrabold">{{ $country->name }}</dt>
+                            <dd class="text-gray-500">País</dd>
+                        </div>
+                        <div class="flex flex-col items-center justify-center">
+                            <dt class="mb-2 text-lg font-extrabold">{{ $project->gerente->name }}</dt>
+                            <dd class="text-gray-500">Gerente</dd>
+                        </div>
+                    </dl>
+                    @if (!empty($weeknd['freeList']))
+                        <h1 class="text-lg">Semana Libre</h1>
+                        <ul class="mb-7">
+                            @foreach ($weeknd['freeList'] as $item)
+                                <li>{{ date('d-m-Y', strtotime($item['date'])) }} a {{ date('d-m-Y', strtotime($item['date'].'+ 7 days')) }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <h1 class="text-lg">Notas del proyecto</h1>
                     @if (!empty($project->notes))
-                        <p class="bg-base-200 italic text-sm p-2 rounded">{{ $project->notes }}</p>
+                        <p class="bg-base-200 text-sm p-2 rounded">{{ $project->notes }}</p>
                     @else
-                        <p class="bg-base-200 italic text-sm p-2 rounded text-center w-full">No hay notas pendientes.</p>
+                        <p class="bg-base-200 text-sm p-2 rounded text-center w-full">No hay notas pendientes.</p>
                     @endif
                 </div>
             </div>
@@ -385,7 +416,7 @@
         let previewFileActualId     =   0;
         $("#loading_add_file").hide();
 
-        function navigate(name, route, id, weekFrom = 0, weekTo = 0, contador = 0) {
+        function navigate(name, route, id, weekSelected = null, weekFrom = 0, weekTo = 0, contador = 0) {
             const detailsId =   "#dir_"+id+" details"
             const url       =   '{{ url("/projects/navigate") }}?projectId={{ $project->id }}&route='+route+'&link='+id;
             const isOpen    =   $(detailsId).attr('open');
@@ -410,7 +441,7 @@
                         else {
                             // prepareAppend   +=  '--- <span onclick="openModalAddDir('+route+', '+id+');" class="ml-1 mr-3 p-1 rounded-lg cursor-pointer text-xs">Crear carpeta</span> • <span onclick="openModalAddFile('+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg ml-3 text-xs cursor-pointer">Subir archivo</span>';
                             @if($canAddFile)
-                                prepareAppend   +=  '--- <span onclick="openModalAddFile(\''+name+'\', '+route+', '+id+', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg text-xs cursor-pointer">Subir archivo</span>';
+                                prepareAppend   +=  '--- <span onclick="openModalAddFile(\''+name+'\', '+route+', '+id+', \''+weekSelected+'\', '+weekFrom+', '+weekTo+')" class="p-1 rounded-lg text-xs cursor-pointer">Subir archivo</span>';
                             @endif
                         }
                         if(data.length > 0) {
@@ -422,9 +453,9 @@
                                     //     prepareAppend   +=      '<li id="dir_'+data[i].id+'" class="text-red-600" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+')">';
                                     // else
                                     if(!data[i].alert)
-                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
+                                        prepareAppend   +=      '<li id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', \''+data[i].week_selected+'\', '+data[i].week_from+', '+data[i].week_to+')">';
                                     else
-                                        prepareAppend   +=      '<li class="bg-red-200" id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', '+data[i].week_from+', '+data[i].week_to+')">';
+                                        prepareAppend   +=      '<li class="bg-red-200" id="dir_'+data[i].id+'" onclick="navigate(\''+data[i].name+'\', '+data[i].route+', '+data[i].id+', \''+data[i].week_selected+'\', '+data[i].week_from+', '+data[i].week_to+')">';
                                     prepareAppend   +=      '<details><summary><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>';
                                     
                                     if(data[i].week_selected != null) {
@@ -500,17 +531,24 @@
                     let isOpen   =   $("#dir_"+id+" details").removeAttr('open');
                 });
         }
-        function openModalAddFile(name, route, id, weekFrom, weekTo) {
+        function openModalAddFile(name, route, id, weekSelected, weekFrom, weekTo) {
             $("#addFileRoute").val((route+1));
             $("#addFileLink").val(id);
             let selectWeek  =   '<option value="" disabled selected>Elige una semana</option>';
-            if(weekTo == 0) {
-                if(weekFrom > 0)
-                    selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>';
+            if(weekSelected != "null") {
+                const weekselectedArry  =   weekSelected.split(",");
+                for(var i = 0; i < weekselectedArry.length; i++)
+                    selectWeek  +=  '<option value="'+weekselectedArry[i]+'">'+weekselectedArry[i]+'</option>'
             }
             else {
-                for(weekFrom; weekFrom <= weekTo; weekFrom++)
-                    selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>'
+                if(weekTo == 0) {
+                    if(weekFrom > 0)
+                        selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>';
+                }
+                else {
+                    for(weekFrom; weekFrom <= weekTo; weekFrom++)
+                        selectWeek  +=  '<option value="'+weekFrom+'">'+weekFrom+'</option>'
+                }
             }
             $("#addFileWeek").html(selectWeek);
             if(name == 'Ficha de depósito / SWIFT')

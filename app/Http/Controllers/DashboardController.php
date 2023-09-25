@@ -22,6 +22,7 @@ class DashboardController extends Controller
         $region         =   null;
         $country        =   null;
         $filterByDate   =   null;
+        $cronogramas    =   [];
         $filterById     =   0;
         if($r->has('projectId'))
             $filterById     =   $r->projectId;
@@ -58,8 +59,10 @@ class DashboardController extends Controller
                     $projects   =   Project::where('regionId', $region->id)->where('countryId', $country->id)->get();
             }
         }
-        else
+        else {
             $projects   =   Project::where('id', $filterById)->get();
+            $cronogramas    =   Cronograma::where('projectId', $projects[0]->id)->get();
+        }
         
         return view('dashboard', [
             'financiera_chart' => $this->generateChart("Admin. / Financiera", $projects),
@@ -80,7 +83,9 @@ class DashboardController extends Controller
             'jsCountries' => Country::all(),
 
             'chartProject' => ($filterById > 0 ? true : false),
-            'chartProjectData' => ($filterById > 0 ? Project::find($filterById) : false)
+            'chartProjectData' => ($filterById > 0 ? Project::find($filterById) : false),
+
+            'cronogramas' => $cronogramas
         ]);
     }
 
@@ -125,18 +130,7 @@ class DashboardController extends Controller
 
             $weeks      =   $this->getWeekNumber($project->inicia, date('Y-m-d'));
             $weeknd     =   $this->weeknd($project->id);
-            $isWeekFree =   false;
-            foreach($weeknd['freeList'] as $item)
-            {
-                if($item['week'] == $weeks)
-                {
-                    $isWeekFree = true;
-                    break;
-                }
-            }
-            if($isWeekFree)
-                continue;
-
+            
             for($x = 0; $x < sizeof($dirs); $x++)
             {  
                 $dir    =   $dirs[$x];
@@ -145,11 +139,38 @@ class DashboardController extends Controller
                 
                 if($i+1 == sizeof($projects))
                     $result["keys"][]   =   $dir->name;
-                if($dir->type == 'directory' && $dir->week_from > 0)
+                if($dir->type == 'directory' && $dir->week_from > 0 || $dir->week_selected != null)
                 {
                     $files  =   Directory::where('link', $dir->id)->where('type', '!=', 'directory')->get();
                     // sí el directorio no esta vacío calculamos la fecha de entrega de cada archivo
                     // que se subio para este directorio para saber si esta todo al día o con retrasos. 
+                    foreach($weeknd['freeList'] as $item)
+                    {
+                        if($dir->week_selected != null) {
+                            $selects    =   explode(",", $dir->week_selected);
+                            $newWeek    =   '';
+                            for($w = 0; $w < sizeof($selects); $w++) {
+                                $newWeekReplace     =   0;
+                                if($selects[$w] <= $item['week']) 
+                                    $newWeekReplace     =  $selects[$w]+1;
+                                else
+                                    $newWeekReplace     =  $selects[$w];
+                                if($w+1 == sizeof($selects))
+                                    $newWeek    .=  $newWeekReplace;
+                                else
+                                    $newWeek    .=  $newWeekReplace.', ';
+                            }
+                            $dir->week_selected     =   str_replace(" ", "", $newWeek);
+                        }
+                        else {
+                            if($dir->week_from <= $item['week']) {
+                                $dir->week_from     += 1;
+                                if($dir->week_to > 0)
+                                    $dir->week_to   += 1;
+                            }
+                        }
+                    }
+        
                     if(sizeof($files) > 0) {
                         foreach($files as $file) {
                             if($dir->week_selected != null) {

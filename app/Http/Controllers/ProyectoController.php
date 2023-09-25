@@ -70,6 +70,7 @@ class ProyectoController extends Controller
 
     public function store(Request $r) {
         // dd($r->all());
+
         $store  =   Project::create($r->except([
             '_token',
             'financiera',
@@ -79,8 +80,17 @@ class ProyectoController extends Controller
             'estrategica_tactica',
             'estrategica_tactica_week',
             'gestion_humana',
-            'gestion_humana_week'
+            'gestion_humana_week',
+            'week_free'
         ]));
+
+        for($i = 0; $i < sizeof($r->week_free); $i++) {
+            if($r->week_free[$i] != null)
+                SemanaLibre::create([
+                    'projectId' => $store->id,
+                    'week_free' => $r->week_free[$i]
+                ]);
+        }
 
         $this->create_default_directory(
             'Admin. / Financiera', 
@@ -297,8 +307,37 @@ class ProyectoController extends Controller
             if($dirs[$i]->type == 'directory') {
                 $dirs[$i]->count    =   Directory::where('link', $dirs[$i]->id)->count();
                 $isAlert    =   false;
+                $week_to    =   $dirs[$i]->week_to;
+                $week_from  =   $dirs[$i]->week_from;
+                $week_selected  =   $dirs[$i]->week_selected;
+                foreach($weeknd['freeList'] as $item)
+                {
+                    if($dirs[$i]->week_selected != null) {
+                        $selects    =   explode(",", $dirs[$i]->week_selected);
+                        $newWeek    =   '';
+                        for($w = 0; $w < sizeof($selects); $w++) {
+                            $newWeekReplace     =   0;
+                            if($selects[$w] <= $item['week']) 
+                                $newWeekReplace     =  $selects[$w]+1;
+                            else
+                                $newWeekReplace     =  $selects[$w];
+                            if($w+1 == sizeof($selects))
+                                $newWeek    .=  $newWeekReplace;
+                            else
+                                $newWeek    .=  $newWeekReplace.',';
+                        }
+                        $week_selected     =   $newWeek;
+                    }
+                    else {
+                        if($dirs[$i]->week_from <= $item['week']) {
+                            $week_from     += 1;
+                            if($dirs[$i]->week_to > 0)
+                                $week_to   += 1;
+                        }
+                    }
+                }
                 if($dirs[$i]->week_selected != null) {
-                    $getWeeks   =   explode(",", $dirs[$i]->week_selected);
+                    $getWeeks   =   explode(",", $week_selected);
                     foreach($getWeeks as $item)
                     {
                         if($weeknd['weekActual'] > $getWeeks) {
@@ -310,8 +349,8 @@ class ProyectoController extends Controller
                     }
                 }
                 else {
-                    if($dirs[$i]->week_to != 0) {
-                        for($x = $dirs[$i]->week_from; $x <= $dirs[$i]->week_to; $x++)
+                    if($week_to != 0) {
+                        for($x = $week_from; $x <= $week_to; $x++)
                         {
                             if($weeknd['weekActual'] > $x) {
                                 if($dirs[$i]->count == 0) {
@@ -322,7 +361,7 @@ class ProyectoController extends Controller
                         }
                     }
                     else {
-                        if($weeknd['weekActual'] > $dirs[$i]->week_from) {
+                        if($weeknd['weekActual'] > $week_from) {
                             if($dirs[$i]->count == 0)
                                 $isAlert = true;
                         }
@@ -375,7 +414,7 @@ class ProyectoController extends Controller
             {
                 $weekFreeList[$i]['date']   =   $item->week_free;
                 $weekFreeList[$i]['week']   =   $this->getWeekNumber($project->inicia, $item->week_free);
-                $endDate    =   date("Y-m-d", strtotime($endDate.'+ 7 days'));
+                // $endDate    =   date("Y-m-d", strtotime($endDate.'+ 7 days')); // correr 1 semana todo el proyecto.
                 $i++;
             }
         }
