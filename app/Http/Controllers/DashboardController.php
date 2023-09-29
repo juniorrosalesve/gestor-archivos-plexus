@@ -339,6 +339,7 @@ class DashboardController extends Controller
         $totalKeys      =   sizeof($result['keys']);
         $totalDirs      =   (sizeof($projects)*$totalKeys);
         $porcentaje     =   [];
+        dd("Ok: ".$OkConteo." | Out: ".$outTimeConteo." | Bad: ".$BadConteo);
         $porcentaje["total_ok"]     =   ($OkConteo*sizeof($projects))/100;
         $porcentaje["total_countOk"]     =   $OkConteo;
         $porcentaje["total_outTime"]    =   ($outTimeConteo*sizeof($projects))/100;
