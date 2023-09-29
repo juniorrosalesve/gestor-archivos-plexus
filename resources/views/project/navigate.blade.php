@@ -39,17 +39,38 @@
                 </div>
             </div>
             <hr />
+            <h1 class="mt-2 ml-4 -mb-3 text-3xl font-extrabold">{{ $project->name }}</h1>
+            <div class="-mb-8">
+                <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
+                    <div class="flex flex-col items-center justify-center">
+                        <dt class="mb-2 text-lg font-extrabold">{{ $region->name }}</dt>
+                        <dd class="text-gray-500">Región</dd>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <dt class="mb-2 text-lg font-extrabold">{{ $region->user->name }}</dt>
+                        <dd class="text-gray-500">Director</dd>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <dt class="mb-2 text-lg font-extrabold">{{ $country->name }}</dt>
+                        <dd class="text-gray-500">País</dd>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <dt class="mb-2 text-lg font-extrabold">{{ $project->gerente->name }}</dt>
+                        <dd class="text-gray-500">Gerente</dd>
+                    </div>
+                </dl>
+            </div>
             <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
                 <div class="flex flex-col items-center justify-center">
-                    <dt class="mb-2 text-3xl font-extrabold">{{ date("d-m-y", strtotime($project->inicia)) }}</dt>
+                    <dt class="mb-2 text-lg font-extrabold">{{ date("d-m-y", strtotime($project->inicia)) }}</dt>
                     <dd class="text-gray-500">Fecha de inicio</dd>
                 </div>
                 <div class="flex flex-col items-center justify-center">
-                    <dt class="mb-2 text-3xl font-extrabold">{{ $weeknd['totalWeek'] }}</dt>
+                    <dt class="mb-2 text-lg font-extrabold">{{ $weeknd['totalWeek'] }}</dt>
                     <dd class="text-gray-500">Semanas</dd>
                 </div>
                 <div class="flex flex-col items-center justify-center">
-                    <dt class="mb-2 text-3xl font-extrabold">
+                    <dt class="mb-2 text-lg font-extrabold">
                         @php
                             $canAddFile     =   true;
                             $now    =   date('Y-m-d');
@@ -63,7 +84,7 @@
                     <dd class="text-gray-500">Fecha final</dd>
                 </div>
                 <div class="flex flex-col items-center justify-center">
-                    <dt class="mb-2 text-3xl font-extrabold">
+                    <dt class="mb-2 text-lg font-extrabold">
                         @php
                             $startDate = new DateTime($project->inicia);
                             $endDate = new DateTime();
@@ -108,26 +129,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="mt-5">
-                    <h1 class="text-2xl">Información del proyecto</h1>
-                    <dl class="grid grid-cols-4 gap-8 p-4 mx-auto text-gray-900 sm:p-8">
-                        <div class="flex flex-col items-center justify-center">
-                            <dt class="mb-2 text-lg font-extrabold">{{ $region->name }}</dt>
-                            <dd class="text-gray-500">Región</dd>
-                        </div>
-                        <div class="flex flex-col items-center justify-center">
-                            <dt class="mb-2 text-lg font-extrabold">{{ $region->user->name }}</dt>
-                            <dd class="text-gray-500">Director</dd>
-                        </div>
-                        <div class="flex flex-col items-center justify-center">
-                            <dt class="mb-2 text-lg font-extrabold">{{ $country->name }}</dt>
-                            <dd class="text-gray-500">País</dd>
-                        </div>
-                        <div class="flex flex-col items-center justify-center">
-                            <dt class="mb-2 text-lg font-extrabold">{{ $project->gerente->name }}</dt>
-                            <dd class="text-gray-500">Gerente</dd>
-                        </div>
-                    </dl>
+                <div class="mt-8">
                     @if (!empty($weeknd['freeList']))
                         <h1 class="text-lg">Semana Libre</h1>
                         <ul class="mb-7">

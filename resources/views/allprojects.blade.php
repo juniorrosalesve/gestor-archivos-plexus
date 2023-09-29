@@ -44,7 +44,10 @@
                                         if($weekActual >= $project->semanas)
                                             $weekActual     =   $project->semanas;
             
-                                        echo $weekActual;
+                                        if($weekActual == $project->semanas)
+                                            echo 'Proyecto cerrado';
+                                        else
+                                            echo $weekActual;
                                     @endphp
                                 </td>
                             </tr>
