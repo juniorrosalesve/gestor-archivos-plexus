@@ -347,6 +347,7 @@ class DashboardController extends Controller
         $porcentaje["total_countBad"]   =   $BadConteo;
         foreach($SubOkConteo as $key=>$item) {
             $p    =   ($item*sizeof($projects))/100;
+            dd($p);
             $porcentaje['total_sub_ok'][]    =   explode(".", $p)[1];
         }
         foreach($outTime as $key=>$item) 
