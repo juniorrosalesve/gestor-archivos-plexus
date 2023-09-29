@@ -335,7 +335,7 @@ class DashboardController extends Controller
                     $outTime[$key]   +=  $item;
             }
         }
-        dd($SubOkConteo);
+        dd($outTime);
         $totalKeys      =   sizeof($result['keys']);
         $totalDirs      =   (sizeof($projects)*$totalKeys);
         $porcentaje     =   [];
