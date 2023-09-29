@@ -335,7 +335,7 @@ class DashboardController extends Controller
                     $outTime[$key]   +=  $item;
             }
         }
-        dd($SubOkConteo);
+        // dd($SubOkConteo);
         $totalKeys      =   sizeof($result['keys']);
         $totalDirs      =   (sizeof($projects)*$totalKeys);
         $porcentaje     =   [];
@@ -350,10 +350,16 @@ class DashboardController extends Controller
             dd($p);
             $porcentaje['total_sub_ok'][]    =   explode(".", $p)[1];
         }
-        foreach($outTime as $key=>$item) 
+        foreach($outTime as $key=>$item) {
+            $p    =   ($item*sizeof($projects))/100;
+            dd($p);
             $porcentaje['total_sub_outTime'][]    =   ($item*sizeof($projects))/100;
-        foreach($SubBadConteo as $key=>$item) 
+        }
+        foreach($SubBadConteo as $key=>$item) {
+            $p    =   ($item*sizeof($projects))/100;
+            dd($p);
             $porcentaje['total_sub_bad'][]    =   ($item*sizeof($projects))/100;
+        }
         $porcentaje['keys']         =   $result['keys'];
 
         return $porcentaje;
