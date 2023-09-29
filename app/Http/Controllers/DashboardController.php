@@ -348,17 +348,17 @@ class DashboardController extends Controller
         foreach($SubOkConteo as $key=>$item) {
             $p  =   ($item*sizeof($projects))/100;
             // $p  =   explode(".", $p);    
-            $porcentaje['total_sub_ok'][]    =   $p;
+            $porcentaje['total_sub_ok'][]    =   ($p*100);
         }
         foreach($outTime as $key=>$item) {
             $p    =   ($item*sizeof($projects))/100;
             // $p  =   explode(".", $p);    
-            $porcentaje['total_sub_outTime'][]    =   $p;
+            $porcentaje['total_sub_outTime'][]    =   ($p*100);
         }
         foreach($SubBadConteo as $key=>$item) {
             $p    =   ($item*sizeof($projects))/100;
             // $p  =   explode(".", $p);    
-            $porcentaje['total_sub_bad'][]    =   $p;
+            $porcentaje['total_sub_bad'][]    =   ($p*100);
         }
         $porcentaje['keys']         =   $result['keys'];
 
