@@ -136,6 +136,8 @@ class DashboardController extends Controller
                 $dir    =   $dirs[$x];
                 if($dir->no_aplica == true)  
                     continue;
+                if($dir->name == 'Cronograma de pagos')
+                    continue;
                 
                 if($i+1 == sizeof($projects))
                     $result["keys"][]   =   $dir->name;
