@@ -71,8 +71,8 @@ class DashboardController extends Controller
             'gestion_humana_chart' => $this->generateChart("Gestión Humana", $projects),
 
             'projects_opens' => $this->getProjectsOpen($projects),
-            'facturas_vencidas' => $this->getFechaFacturasVencidas($r->region, $r->country, $r->chartProject),
-            'facturas_mora' => $this->getFechaFacturasMora($r->region, $r->country, $r->chartProject),
+            'facturas_vencidas' => $this->getFechaFacturasVencidas($r->region, $r->country, $filterById),
+            'facturas_mora' => $this->getFechaFacturasMora($r->region, $r->country, $filterById),
             'years' => $this->getYearsDashboard(),
             'filterByDate' => $filterByDate,
             'regions' => Region::all(),
