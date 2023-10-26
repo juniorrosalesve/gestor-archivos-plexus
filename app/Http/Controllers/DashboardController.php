@@ -134,8 +134,8 @@ class DashboardController extends Controller
             for($x = 0; $x < sizeof($dirs); $x++)
             {  
                 $dir    =   $dirs[$x];
-                if($dir->no_aplica == true)  
-                    continue;
+                // if($dir->no_aplica == true)  
+                //     continue;
                 if($dir->name == 'Cronograma de pagos')
                     continue;
                 

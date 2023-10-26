@@ -99,7 +99,10 @@
                                 if($weekActual <= $weeknd['freeList'][$i]['week'])
                                     $weekActual--;
                             }
-                            echo $weekActual;
+                            if($weekActual == $project->semanas)
+                                echo 'Finalizado';
+                            else
+                                echo $weekActual;
                         @endphp
                     </dt>
                     <dd class="text-gray-500">Semana actual</dd>
